@@ -6,21 +6,26 @@ import chromadb
 import subprocess
 import time
 from sentence_transformers import SentenceTransformer
+import open_clip
+import torch
+
 from shared.logger import logger
 
+_server_process = None
 
-# TODO: If program crashes, server will continue running in background, fix plz!!
-# Starting chroma server
 def start_server():
+    global _server_process
     logger.clear_logs()
-    
-    subprocess.Popen(
+    _server_process = subprocess.Popen(
         ["chroma", "run", "--path", "./chroma_db"],
-        stdout=subprocess.DEVNULL, # stops from printing server outputs
-        stderr=subprocess.DEVNULL # stops from printing server errors
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
     )
-
     logger.log("[LOG] Started Chroma server.")
+
+def stop_server():
+    if _server_process:
+        _server_process.terminate()
+        _server_process.wait()
 
 _embedder = None
 _client = None
@@ -34,26 +39,43 @@ def get_embedder():
 def get_client():
     global _client
     if _client is None:
-        # _client = chromadb.PersistentClient(path="./chroma_db",
-
-
-        # NOTE TO TEAMMATES:
-        # I tried running the program once, but I got an error saying server hasnt started, which implied that the other parts of the program(eg. watcher) started running before the server had started.
-        # Adding this timer fixed it, However, since then I havn't been able to recreate it
-        # V V V V V V V V
-
-        # attempt the server in 0.5 secs intervals 
         i = 0; 
-        while True:
+        while i < 50:
             try:                        
-                _client = chromadb.HttpClient(host="localhost", port=8000, settings=chromadb.Settings(allow_reset=True))
+                _client = chromadb.HttpClient(host="localhost", port=8000)
+                _client.heartbeat()
                 logger.log("[LOG] Server started.")
-                print(f"Welcome to Cortex!");
                 break
-            except:
-                logger.log(f"[LOG] Failed to start server, retrying ({i})...")
-                print(f"Failed to start server, retrying ({i})...")
+            except (ConnectionError, Exception) as e:
                 i += 1
+                logger.log(f"[LOG] Server not ready yet: {e}")
+                print(f"Failed to start server, retrying ({i}/50)...")
                 time.sleep(0.5)
 
     return _client
+
+_model = None
+_preprocess = None
+_tokenizer = None
+_device = None
+
+def get_clip():
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    global _model, _preprocess, _tokenizer, _device
+    if _model is None:
+        # prefer NVIDIA GPU if available, else fallback to CPU
+        _device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        _model, _, _preprocess = open_clip.create_model_and_transforms(
+            "ViT-B-32", 
+            pretrained="laion2b_s34b_b79k"
+        )
+
+        # ignore second argument since we dont need to train the model, 
+        # we just need the pretrained weights for inference.
+        _tokenizer = open_clip.get_tokenizer("ViT-B-32")
+        
+        _model = _model.to(_device)
+        _model.eval() #set to inference mode, not training mode
+    
+    return _model, _preprocess, _tokenizer, _device

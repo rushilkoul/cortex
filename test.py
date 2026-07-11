@@ -7,21 +7,21 @@ from retrieval.search import search_text
 from shared.logger import logger
 from shared.models import start_server
 
-# file_path = "/home/rushil/Desktop/Projects/velvet/docs/widgets.md"
+# # file_path = "/home/rushil/Desktop/Projects/velvet/docs/widgets.md"
 
-# if needs_indexing(file_path):
-#     text = Path(file_path).read_text(encoding="utf-8")
-#     chunks = chunk_markdown(text) # OR use chunk_text if youre pointing to text. extension basis par choose karna later
+# # if needs_indexing(file_path):
+# #     text = Path(file_path).read_text(encoding="utf-8")
+# #     chunks = chunk_markdown(text) # OR use chunk_text if youre pointing to text. extension basis par choose karna later
 
-#     # # present for debugging. not always needed
-#     # print(f"Split into {len(chunks)} chunks")
-#     # for i, c in enumerate(chunks):
-#     #     print(f"--- chunk {i} ({len(c)} chars) ---")
-#     #     print(c[:100], "...")
+# #     # # present for debugging. not always needed
+# #     # print(f"Split into {len(chunks)} chunks")
+# #     # for i, c in enumerate(chunks):
+# #     #     print(f"--- chunk {i} ({len(c)} chars) ---")
+# #     #     print(c[:100], "...")
 
-#     store_chunks(file_path, chunks)
-# else:
-#     print("unchanged, skipping", file_path)
+# #     store_chunks(file_path, chunks)
+# # else:
+# #     print("unchanged, skipping", file_path)
 
 
 
@@ -37,3 +37,14 @@ while True:
         print(r["content"])
 
     print("-"*80)
+
+
+# from ingestion.store import store_image
+# from retrieval.search import search_image
+
+# store_image("/home/rushil/Pictures/Screenshots/shot_2026-04-29_23-36-35.png")
+# store_image("/home/rushil/Pictures/Screenshots/taj.png")
+
+# results = search_image("taj mahal")
+# for r in results:
+#     print(r)

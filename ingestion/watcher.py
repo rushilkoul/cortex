@@ -3,15 +3,12 @@ import time
 import tomllib
 from watchdog import events
 from watchdog.observers import Observer
-from ingestion.store import needs_indexing, store_chunks
-from ingestion.chunking import chunk_markdown
+from ingestion.store import try_index
 from shared.logger import logger
 
 from pathlib import Path
 
 class EventHandler(events.FileSystemEventHandler):
-    #def on_any_event(self, event: events.FileSystemEvent) -> None:
-        #print("Untracked event occured")
 
     def dispatch(self, event):
         path = str(event.src_path)
@@ -29,12 +26,8 @@ class EventHandler(events.FileSystemEventHandler):
             logger.log(f"[DIR CREATED] {event.src_path}")
         else:
             logger.log(f"[FILE CREATED] {event.src_path}")
-            if needs_indexing(event.src_path):
-                text = Path(event.src_path).read_text(encoding="utf-8")
-                chunks = chunk_markdown(text)
-                store_chunks(event.src_path, chunks)
-            else:
-                logger.log(f"[SKIPPED UNCHANGED (on_create)] {event.src_path}")
+
+            try_index(event.src_path)
 
     def on_deleted(self, event: events.DirDeletedEvent | events.FileDeletedEvent) -> None:
         if event.is_directory:
@@ -47,19 +40,14 @@ class EventHandler(events.FileSystemEventHandler):
             logger.log(f"[DIR MODIFIED] {event.src_path}")
         else:
             logger.log(f"[FILE MODIFIED] {event.src_path}")
-            if needs_indexing(event.src_path):
-                text = Path(event.src_path).read_text(encoding="utf-8")
-                chunks = chunk_markdown(text)
-                store_chunks(event.src_path, chunks)
-            else:
-                print("[SKIPPED UNCHANGED (on_modified)]", event.src_path)
+            try_index(event.src_path)
     
     # when a file is moved OR *renamed*
     def on_moved(self, event: events.DirMovedEvent | events.FileMovedEvent) -> None:
         if event.is_directory:
-            print(f"[DIR MOVED] {event.src_path} ==> {event.dest_path}")
+            logger.log(f"[DIR MOVED] {event.src_path} ==> {event.dest_path}")
         else:
-            print(f"[FILE MOVED] {event.src_path} ==> {event.dest_path}")
+            logger.log(f"[FILE MOVED] {event.src_path} ==> {event.dest_path}")
 
 # starts tracking files
 def start_watcher():

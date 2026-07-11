@@ -8,7 +8,7 @@ source .venv/bin/activate
 uv pip install -r requirements.txt
 ```
 
-download MiniLM model:
+cache required models:
 
 DO THIS PEHLE SE. `test.py` runs in offline mode and will crash if you run it without running this first 
 ```
@@ -17,27 +17,13 @@ python cacheMiniLM.py
 at `~/.cache/huggingface/hub/`
 
 ## current state
-
-- `test.py` lets you keep typing queries in a while loop while returning results
 - `config.toml`: add tracked paths here
 
-when you MODIFY or CREATE a file it triggers the embedding. only use **markdown** (pls) for now
-
-### to run:
-start chroma server
+kya maza agya. all you gotta do is run one file now
 ```
-chroma run --path ./chroma_db
+python main.py
 ```
-
-start watchdog
-```
-python -m ingestion.watcher
-```
-
-finally
-```
-python test.py
-```
+starts the chromadb server, watchdog, and searcher all at the same time. exits cleanly too, even on KeyboardInterrupt and such
 
 
-###### ~~yeah you need three separate terminals just to get this working ill fix it later shut up~~
+###### ~~yeah you need three separate terminals just to get this working ill fix it later shut up~~ NOT ANYMORE MUAHEHEHEHEH

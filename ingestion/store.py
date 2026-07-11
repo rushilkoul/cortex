@@ -1,13 +1,56 @@
-from shared.models import get_embedder, get_client
-from shared.logger import logger
 import hashlib
 
-def file_hash(path: str) -> str:
-    with open(path, "rb") as f:
-        return hashlib.sha256(f.read()).hexdigest()
+from shared.models import get_embedder, get_client
+from shared.logger import logger
+from ingestion.clip import embed_image
+from ingestion.chunking import chunk_markdown
+from pathlib import Path 
+
+TEXT_EXTENSIONS = {".md", ".markdown"}
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+
+def try_index(file_path: str) -> None:
+    path = Path(file_path)
+    if not path.exists() or path.is_dir():
+        return
+
+    suffix = path.suffix.lower()
+
+    if suffix in IMAGE_EXTENSIONS:
+        try:
+            if needs_indexing(file_path):
+                store_image(file_path)
+            else:
+                logger.log(f"[SKIPPED UNCHANGED] {file_path}")
+        except Exception as e:
+            logger.log(f"[ERROR indexing image] {file_path}: {e}")
+        return
+
+    if suffix not in TEXT_EXTENSIONS:
+        return  # not a type we handle
+
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, PermissionError, FileNotFoundError) as e:
+        logger.log(f"[SKIPPED UNREADABLE] {file_path}: {e}")
+        return
+
+    if not text.strip():
+        return
+
+    if needs_indexing(file_path):
+        chunks = chunk_markdown(text)
+        if chunks:
+            store_chunks(file_path, chunks)
+    else:
+        logger.log(f"[SKIPPED UNCHANGED] {file_path}")
+
     
 
 # TODO: This sometimes returns false when it should be true
+
+# what?
+
 def needs_indexing(file_path: str) -> bool:
     current_hash = file_hash(file_path)
 
@@ -20,15 +63,8 @@ def needs_indexing(file_path: str) -> bool:
 
  
 def store_chunks(file_path: str, chunks: list[str]):
-    # removing empty chunks
-    for i in range(len(chunks)):
-        temp = chunks[i].replace(" ", "")
-        if temp == "":
-            chunks.pop(i)
-            logger.log("[LOG] Skipped an empty chunk")
-    
-    # if every chunk is empty
-    if len(chunks) == 0:
+    chunks = [c for c in chunks if c.replace(" ", "").strip() != ""]
+    if not chunks:
         logger.log("[LOG] Cancelled empty chunk storage")
         return
 
@@ -53,4 +89,25 @@ def store_chunks(file_path: str, chunks: list[str]):
         metadatas=metadatas,
     )
 
+
+
+def store_image(file_path: str):
+    embedding = embed_image(file_path)
+
+    client = get_client()
+    collection = client.get_or_create_collection("images")
+    hash_ = file_hash(file_path)
+
+    collection.delete(where={"file_path": file_path})
+    collection.add(
+        ids=[file_path],
+        embeddings=[embedding],
+        metadatas=[{"file_path": file_path, "file_hash": hash_}],
+    )
+
+
+def file_hash(path: str) -> str:
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
     
+
