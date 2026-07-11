@@ -1,4 +1,4 @@
-from retrieval.models import get_embedder, get_client
+from shared.models import get_embedder, get_client
 
 def search_text(query: str, k: int = 5) -> list[dict]:
     embedder = get_embedder()

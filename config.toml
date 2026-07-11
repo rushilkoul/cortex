@@ -2,7 +2,7 @@ title = "Cortex Config"
 
 [tracker]
 directories = [
-    ".",
+    "~/projects/ZeText/",
 ]
 
 [logger]

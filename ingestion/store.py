@@ -1,4 +1,5 @@
-from retrieval.models import get_embedder, get_client
+from shared.models import get_embedder, get_client
+from shared.logger import logger
 import hashlib
 
 def file_hash(path: str) -> str:
@@ -6,6 +7,7 @@ def file_hash(path: str) -> str:
         return hashlib.sha256(f.read()).hexdigest()
     
 
+# TODO: This sometimes returns false when it should be true
 def needs_indexing(file_path: str) -> bool:
     current_hash = file_hash(file_path)
 
@@ -18,6 +20,18 @@ def needs_indexing(file_path: str) -> bool:
 
  
 def store_chunks(file_path: str, chunks: list[str]):
+    # removing empty chunks
+    for i in range(len(chunks)):
+        temp = chunks[i].replace(" ", "")
+        if temp == "":
+            chunks.pop(i)
+            logger.log("[LOG] Skipped an empty chunk")
+    
+    # if every chunk is empty
+    if len(chunks) == 0:
+        logger.log("[LOG] Cancelled empty chunk storage")
+        return
+
     embedder = get_embedder()
     client = get_client()
 

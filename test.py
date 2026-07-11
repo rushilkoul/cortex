@@ -1,7 +1,11 @@
+import subprocess
 from pathlib import Path
 from ingestion.chunking import chunk_markdown
 from ingestion.store import needs_indexing, store_chunks
+from ingestion.watcher import start_watcher
 from retrieval.search import search_text
+from shared.logger import logger
+from shared.models import start_server
 
 # file_path = "/home/rushil/Desktop/Projects/velvet/docs/widgets.md"
 
@@ -18,6 +22,13 @@ from retrieval.search import search_text
 #     store_chunks(file_path, chunks)
 # else:
 #     print("unchanged, skipping", file_path)
+
+
+
+# starting the chroma server in a subprocess
+
+start_server()
+observer = start_watcher()
 
 while True:
     query = input("")

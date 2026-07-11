@@ -9,10 +9,6 @@ fileName = config["logger"]["logs_file_name"]
 storeLogs = config["logger"]["store_logs"]
 printLogs = config["logger"]["print_logs"]
 
-# emptying the log file
-with open(f"{location}/{fileName}.txt", "w"):
-    pass
-
 def log(text: str) -> None:
     if storeLogs:
         with open(f"{location}/{fileName}.txt", "a") as f:
@@ -20,3 +16,8 @@ def log(text: str) -> None:
 
     if printLogs:
         print(text)
+
+def clear_logs():
+    # emptying the log file
+    with open(f"{location}/{fileName}.txt", "w"):
+        pass
