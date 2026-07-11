@@ -3,7 +3,7 @@ import os
 os.environ["HF_HUB_OFFLINE"] = "1"
 
 from pathlib import Path
-from retrieval.chunking import chunk_markdown # kavya ke merge ke baad move this into ingestion.chunking
+from ingestion.chunking import chunk_markdown
 from retrieval.store import needs_indexing, store_chunks
 from retrieval.search import search_text
 
