@@ -2,5 +2,11 @@ title = "Cortex Config"
 
 [tracker]
 directories = [
-    "/home/rushil/Desktop/test"
+    ".",
 ]
+
+[logger]
+logs_file_name = "logs"
+logs_file_location = "."
+print_logs = false
+store_logs = true
