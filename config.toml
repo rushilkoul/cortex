@@ -1,0 +1,7 @@
+title = "Cortex Config"
+
+[tracker]
+directories = [
+    ".",
+    "~/Downloads"
+]
