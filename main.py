@@ -4,6 +4,8 @@ from ingestion.chunking import chunk_markdown
 from shared.logger import logger
 from halo import Halo
 
+from reasoning.prompt import build_prompt
+
 app = typer.Typer()
 
 
@@ -14,16 +16,17 @@ def start_shell():
     import atexit
 
     with Halo(text="\033[2mloading models...\033[0m", spinner="dots"):
-        from shared.models import start_server, stop_server, get_clip, get_embedder
+        from shared.models import start_server, stop_server, get_clip, get_embedder, LocalLLM
         get_embedder()
         get_clip()
+        llm = LocalLLM()
 
     atexit.register(stop_server)
     with Halo(text="\033[2mstarting Chroma server\033[0m", spinner="dots"):
         start_server()
 
     from ingestion.watcher import start_watcher
-    from retrieval.search import search_text, search_image
+    from retrieval.search import search
     
     with Halo(text="\033[2mstarting file watcher\033[0m", spinner="dots"):
         observer = start_watcher()
@@ -31,19 +34,24 @@ def start_shell():
     print("Welcome to Cortex!")
     while True:
         query = input("\033[96m>\033[0m ")
-        results = search_text(query)
+        with Halo(text="\033[2mPondering...\033[0m", spinner="dots"):
+            results = search(query, k=5)
+            prompt = build_prompt(query, results)
+            answer = llm.generate(prompt)
+        print(answer, "\n")
+    
 
-        results.append(search_image(query))
+        # print("\033[2m")
+        # for r in results:
+        #     print(r)
+        # print("\033[0m")
 
-        for r in results:
-            print(r)
-
-        print("\n")
-
+        
 
 
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
+
 # cortex info
 @app.command()
 def info():

@@ -79,3 +79,49 @@ def get_clip():
         _model.eval() #set to inference mode, not training mode
     
     return _model, _preprocess, _tokenizer, _device
+
+import tomllib
+from huggingface_hub import hf_hub_download
+from llama_cpp import Llama
+from halo import Halo
+
+class LocalLLM:
+    def __init__(self, config_path: str = "config.toml"):
+        with open(config_path, "rb") as f:
+            config = tomllib.load(f)
+
+        repo_id = config["models"]["llm_repo"]
+        filename = config["models"]["llm_filename"]
+
+        model_path = hf_hub_download(repo_id=repo_id, filename=filename)
+            
+        # ^ resolves from local cache without listing the repo, if already downloaded.
+        # why doesnt it work normally like it does with the others? I dont know.
+
+        try:
+            with Halo(text="\033[2mloading model (GPU)\033[0m", spinner="dots"):
+                self.model = Llama(
+                    model_path=model_path,
+                    n_ctx=4096,
+                    n_gpu_layers=-1,
+                    verbose=False,
+                )
+            print("Ready!")
+
+        except Exception as e:
+            print(f"GPU load failed, falling back to CPU...")
+            logger.log(f"[ERROR] GPU load failed: {e}")
+            with Halo(text="\033[2mloading model (CPU)\033[0m", spinner="dots"):
+                self.model = Llama(
+                    model_path=model_path,
+                    n_ctx=4096,
+                    n_gpu_layers=0,
+                    verbose=False,
+                )
+            print("Ready! (CPU)")
+
+    def generate(self, prompt: str) -> str:
+        response = self.model.create_chat_completion(
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response["choices"][0]["message"]["content"]

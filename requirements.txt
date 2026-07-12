@@ -6,3 +6,4 @@ pillow
 typer
 tomlkit
 halo
+llama-cpp-python

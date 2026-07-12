@@ -49,3 +49,12 @@ def search_image(query: str, k: int = 5) -> list[dict]:
             "score": dist,
         })
     return output
+
+
+def search(query: str, k: int = 5) -> list[dict]:
+    text_results = search_text(query, k=k)
+    image_results = search_image(query, k=k)
+    
+    combined = text_results + image_results
+    combined.sort(key=lambda r: r["score"])
+    return combined[:k]

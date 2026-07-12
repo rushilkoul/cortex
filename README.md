@@ -14,16 +14,30 @@ DO THIS PEHLE SE. `test.py` runs in offline mode and will crash if you run it wi
 ```
 python cacheMiniLM.py
 ``` 
-at `~/.cache/huggingface/hub/`
+at `~/.cache/huggingface/hub/`. around a 1.7 GB download for 3 models
 
-## current state
-- `config.toml`: add tracked paths here
+## current state: CLI
 
-kya maza agya. all you gotta do is run one file now
+```bash
+alias cortex="python main.py"
 ```
-python main.py
+###### ~~(you dont need to do this but it is just so much cooler if you do)~~
+otherwise just use python main.py instead, everything else applies:
+
+```bash
+cortex --help
+
+cortex info
+cortex track <dir>
+cortex untrack <dir>
+
+# run the main file
+cortex 
 ```
-starts the chromadb server, watchdog, and searcher all at the same time. exits cleanly too, even on KeyboardInterrupt and such
 
+talk to llm (separate from main pipeline rn):
+```bash
+python -m reasoning.test_reasoning
+```
 
-###### ~~yeah you need three separate terminals just to get this working ill fix it later shut up~~ NOT ANYMORE MUAHEHEHEHEH
+we need a less censored model. current one is buns.
