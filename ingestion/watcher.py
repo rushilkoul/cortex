@@ -12,29 +12,26 @@ class EventHandler(events.FileSystemEventHandler):
 
     def dispatch(self, event):
         # making sure the file isn't hidden OR isn't inside a hidden directory
-        path = Path(str(event.src_path))
-        
+        path = Path(event.src_path)
+
         # skipping dot files (linux and windows both)
         for part in path.parts:
             if part.startswith("."):
                 logger.log(f"[SKIPPED DOTFILE] {path}")
                 return
 
-
-        # FOR WINDOWS SPECIFICALLY - skipping "hidden" files
+        # FOR WINDOWS SPECIFICALLY - skipping "hidden" files !!!
+        # NOTE: GetFileAttributesW makes a system call in every loop iteration, which isn't very performative
+        # we might want to fix this later by caching known hidden directories
+        # P.S idfk what this code does or what im doing
         if os.name == "nt":
             FILE_ATTRIBUTE_HIDDEN = 0x2
             current = path
-            while True:
-                # NOTE: GetFileAttributesW makes a system call in every loop iteration, which isn't very performative
-                # we might want to fix this later by caching known hidden directories
-                # P.S
+            while current.parent != current:  # never check the drive root itself
                 attrs = ctypes.windll.kernel32.GetFileAttributesW(str(current))
                 if attrs != -1 and attrs & FILE_ATTRIBUTE_HIDDEN:
-                    logger.log(f"[SKIPPED HIDDEN FILE] {path}")
+                    logger.log(f"[SKIPPED HIDDEN FILE (Windows)] {path}")
                     return
-                if current.parent == current:
-                    break
                 current = current.parent
 
         super().dispatch(event)
