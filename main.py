@@ -2,39 +2,48 @@ import typer
 import tomlkit
 from ingestion.chunking import chunk_markdown
 from shared.logger import logger
+from halo import Halo
 
 app = typer.Typer()
 
-# not a command, just a regular function
+
+
+# main
 def start_shell():
     """Opens cortex in a TUI shell"""
-    print("Loading...")
-
     import atexit
-    from shared.models import start_server, stop_server
+
+    with Halo(text="\033[2mloading models...\033[0m", spinner="dots"):
+        from shared.models import start_server, stop_server, get_clip, get_embedder
+        get_embedder()
+        get_clip()
 
     atexit.register(stop_server)
-    start_server()
-    print("Started database server...")
+    with Halo(text="\033[2mstarting Chroma server\033[0m", spinner="dots"):
+        start_server()
 
     from ingestion.watcher import start_watcher
     from retrieval.search import search_text, search_image
     
-    observer = start_watcher()
-    print("Started file watcher...")
+    with Halo(text="\033[2mstarting file watcher\033[0m", spinner="dots"):
+        observer = start_watcher()
 
     print("Welcome to Cortex!")
     while True:
-        query = input("> ")
+        query = input("\033[96m>\033[0m ")
         results = search_text(query)
 
-        if len(results) == 0: results = search_image(query)
+        results.append(search_image(query))
 
         for r in results:
-            print(r["content"])
+            print(r)
 
-        print("-"*40)
+        print("\n")
 
+
+
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
 # cortex info
 @app.command()
 def info():
