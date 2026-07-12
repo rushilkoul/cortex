@@ -8,8 +8,6 @@ from reasoning.prompt import build_prompt
 
 app = typer.Typer()
 
-
-
 # main
 def start_shell():
     """Opens cortex in a TUI shell"""
@@ -45,12 +43,6 @@ def start_shell():
         # for r in results:
         #     print(r)
         # print("\033[0m")
-
-        
-
-
-#------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------
 
 # cortex info
 @app.command()
