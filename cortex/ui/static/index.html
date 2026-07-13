@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cortex</title>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.0/marked.min.js"></script>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="mark">
+      <span class="mark-dot"></span>
+      <span class="mark-text">cortex</span>
+    </div>
+    <div class="status" id="status">warming up…</div>
+  </header>
+
+  <!-- LANDING STATE: greeting + centered input, shown before first query -->
+  <section class="landing" id="landing">
+    <div class="landing-inner">
+      <h1 class="greeting" id="greeting">Hi.</h1>
+      <p class="subtext" id="subtext">Ready to dive in?</p>
+      <div class="landing-input-wrap">
+        <input
+          id="query-landing"
+          class="search-input search-input--landing"
+          placeholder="Search for anything…"
+          autocomplete="off"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- CHAT STATE: scrolling turns + bottom composer, shown after first query -->
+  <main class="canvas" id="canvas">
+    <div class="canvas-inner" id="canvas-inner"></div>
+  </main>
+
+  <footer class="composer" id="composer">
+    <div class="composer-inner">
+      <input
+        id="query-chat"
+        class="search-input"
+        placeholder="Ask another question…"
+        autocomplete="off"
+      >
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

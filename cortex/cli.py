@@ -94,5 +94,11 @@ def main(
         start_shell()
 
 
+@app.command()
+def ui():
+    """Launch the Cortex GUI"""
+    from cortex.ui.app import start_ui
+    start_ui()
+
 if __name__ == "__main__":
     app()
