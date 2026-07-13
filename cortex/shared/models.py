@@ -42,7 +42,7 @@ def get_client():
             try:                        
                 _client = chromadb.HttpClient(host="localhost", port=8000)
                 _client.heartbeat()
-                logger.log("[LOG] Server started.")
+                logger.log("[LOG] Client instantiated.")
                 break
             except (ConnectionError, Exception) as e:
                 i += 1

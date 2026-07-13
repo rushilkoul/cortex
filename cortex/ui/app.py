@@ -2,7 +2,6 @@ import threading
 import webview
 from pathlib import Path
 import getpass
-
     
 UI_DIR = Path(__file__).parent / "static"
 class Api:
@@ -25,10 +24,11 @@ class Api:
         self._loading = True
 
         def _load():
-            from cortex.shared.models import get_embedder, get_clip
-            get_embedder()   # loads MiniLM
-            get_clip()       # loads CLIP
-            self._ensure_llm()  # loads Qwen
+            from cortex.shared.models import get_embedder, get_clip, get_client
+            get_client()
+            get_embedder()
+            get_clip()
+            self._ensure_llm()
             self._loading = False
 
         threading.Thread(target=_load, daemon=True).start()
