@@ -5,9 +5,6 @@ os.environ["HF_HUB_OFFLINE"] = "1"
 import chromadb
 import subprocess
 import time
-from sentence_transformers import SentenceTransformer
-import open_clip
-import torch
 
 from cortex.shared.logger import logger
 
@@ -31,6 +28,7 @@ _embedder = None
 _client = None
 
 def get_embedder():
+    from sentence_transformers import SentenceTransformer
     global _embedder
     if _embedder is None:
         _embedder = SentenceTransformer("all-MiniLM-L6-v2")
@@ -60,7 +58,10 @@ _tokenizer = None
 _device = None
 
 def get_clip():
-    os.environ["HF_HUB_OFFLINE"] = "1"
+
+    import open_clip
+    import torch
+
     global _model, _preprocess, _tokenizer, _device
     if _model is None:
         # prefer NVIDIA GPU if available, else fallback to CPU
