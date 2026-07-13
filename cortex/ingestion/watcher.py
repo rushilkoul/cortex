@@ -1,10 +1,11 @@
 import ctypes
 import os
+import threading
 import time
 import tomllib
 from watchdog import events
 from watchdog.observers import Observer
-from cortex.ingestion.store import try_index
+from cortex.ingestion.store import try_index, bulk_index_all
 from cortex.shared.logger import logger
 from pathlib import Path
 
@@ -81,6 +82,15 @@ def start_watcher():
         observer.schedule(event_handler, path, recursive=True)
 
     observer.start()
+
+    def _bulk_index() -> None:
+        try:
+            bulk_index_all()
+        except Exception as exc:
+            logger.log(f"[ERROR] Bulk indexing failed: {exc}")
+
+    threading.Thread(target=_bulk_index, daemon=True, name="bulk-index").start()
+
     logger.log("[LOG] Watcher started.")
     return observer
 
