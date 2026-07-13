@@ -1,9 +1,8 @@
 import typer
 import tomlkit
+from halo import Halo
 from cortex.ingestion.chunking import chunk_markdown
 from cortex.shared.logger import logger
-from halo import Halo
-
 from cortex.reasoning.prompt import build_prompt
 
 app = typer.Typer()
@@ -82,7 +81,15 @@ def untrack(path: str):
     typer.echo(f"Stopped tracking {path}")
 
 @app.callback(invoke_without_command=True)
-def main(ctx: typer.Context):
+def main(
+    ctx: typer.Context,
+    download: bool = typer.Option(False, "--download", help="Downloads and caches the required models."),
+):
+    if download:
+        from cortex.downloader import download_models
+        download_models()
+        raise typer.Exit()
+
     if ctx.invoked_subcommand == None:
         start_shell()
 
