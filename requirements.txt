@@ -1,9 +1,0 @@
-chromadb
-sentence-transformers
-watchdog
-open_clip_torch
-pillow
-typer
-tomlkit
-halo
-llama-cpp-python

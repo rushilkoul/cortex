@@ -1,9 +1,9 @@
 import hashlib
 
-from shared.models import get_embedder, get_client
-from shared.logger import logger
-from ingestion.clip import embed_image
-from ingestion.chunking import chunk_markdown
+from cortex.shared.models import get_embedder, get_client
+from cortex.shared.logger import logger
+from cortex.ingestion.clip import embed_image
+from cortex.ingestion.chunking import chunk_markdown
 from pathlib import Path 
 
 TEXT_EXTENSIONS = {".md", ".markdown"}

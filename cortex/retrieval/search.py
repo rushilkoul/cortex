@@ -1,7 +1,7 @@
-from shared.models import get_embedder, get_client, get_clip
+from cortex.shared.models import get_embedder, get_client, get_clip
 
 import torch
-from ingestion.clip import get_clip
+from cortex.ingestion.clip import get_clip
 
 def search_text(query: str, k: int = 5) -> list[dict]:
     embedder = get_embedder()

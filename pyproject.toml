@@ -1,0 +1,25 @@
+[project]
+name = "cortex"
+version = "0.1.0"
+description = "Local-first semantic search and RAG assistant"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "chromadb",
+    "sentence-transformers",
+    "watchdog",
+    "open-clip-torch",
+    "pillow",
+    "typer",
+    "tomlkit",
+    "halo",
+    "llama-cpp-python",
+]
+
+[project.scripts]
+cortex = "cortex.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

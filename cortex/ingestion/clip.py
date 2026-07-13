@@ -1,5 +1,5 @@
 from PIL import Image
-from shared.models import get_clip
+from cortex.shared.models import get_clip
 import torch
 
 def embed_image(image_path: str) -> list[float]:

@@ -9,7 +9,7 @@ from sentence_transformers import SentenceTransformer
 import open_clip
 import torch
 
-from shared.logger import logger
+from cortex.shared.logger import logger
 
 _server_process = None
 

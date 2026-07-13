@@ -42,29 +42,22 @@ The LLM, filename, and repo can be swapped by editing `config.toml`.
 uv venv
 source .venv/bin/activate
  
-# 2. install dependencies (~5GB)
-uv pip install -r requirements.txt
+# 2. install dependencies (~5GB) and cortex
+uv sync
  
-# 3. cache the required models before first run (~1.7GB download)
-python downloadmodels.py
+# 3. cache the required models before first run
+cortex --download
 ```
 Once set up, you can run Cortex directly:
  
 ```bash
-python main.py --help
+cortex --help
+
+cortex info              # show tracked directories
+cortex track <dir>       # start tracking a directory
+cortex untrack <dir>     # stop tracking a directory
  
-python main.py info              # show tracked directories
-python main.py track <dir>       # start tracking a directory
-python main.py untrack <dir>     # stop tracking a directory
- 
-python main.py                   # launch the interactive shell
-```
- 
-Or, for convenience, alias it:
- 
-```bash
-alias cortex="python main.py"
-cortex
+cortex                  # launch the interactive shell
 ```
  
 Inside the shell, type a natural-language question and Cortex will search your indexed files and generate an answer using the local LLM.

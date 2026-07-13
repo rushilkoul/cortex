@@ -4,8 +4,8 @@ import time
 import tomllib
 from watchdog import events
 from watchdog.observers import Observer
-from ingestion.store import try_index
-from shared.logger import logger
+from cortex.ingestion.store import try_index
+from cortex.shared.logger import logger
 from pathlib import Path
 
 class EventHandler(events.FileSystemEventHandler):

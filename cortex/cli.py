@@ -1,10 +1,10 @@
 import typer
 import tomlkit
-from ingestion.chunking import chunk_markdown
-from shared.logger import logger
+from cortex.ingestion.chunking import chunk_markdown
+from cortex.shared.logger import logger
 from halo import Halo
 
-from reasoning.prompt import build_prompt
+from cortex.reasoning.prompt import build_prompt
 
 app = typer.Typer()
 
@@ -14,7 +14,7 @@ def start_shell():
     import atexit
 
     with Halo(text="\033[2mloading models...\033[0m", spinner="dots"):
-        from shared.models import start_server, stop_server, get_clip, get_embedder, LocalLLM
+        from cortex.shared.models import start_server, stop_server, get_clip, get_embedder, LocalLLM
         get_embedder()
         get_clip()
         llm = LocalLLM()
@@ -23,8 +23,8 @@ def start_shell():
     with Halo(text="\033[2mstarting Chroma server\033[0m", spinner="dots"):
         start_server()
 
-    from ingestion.watcher import start_watcher
-    from retrieval.search import search
+    from cortex.ingestion.watcher import start_watcher
+    from cortex.retrieval.search import search
     
     with Halo(text="\033[2mstarting file watcher\033[0m", spinner="dots"):
         observer = start_watcher()
