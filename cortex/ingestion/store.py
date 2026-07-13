@@ -70,8 +70,8 @@ def try_index(file_path: str) -> None:
 def delete_file(file_path: str):
     with _INDEX_LOCK:
         client = get_client()
-        client.get_or_create_collection("text_chunks").delete(where={"file_path": file_path})
-        client.get_or_create_collection("images").delete(where={"file_path": file_path})
+        client.get_or_create_collection("text_chunks", metadata={"hnsw:space": "cosine"}).delete(where={"file_path": file_path})
+        client.get_or_create_collection("images", metadata={"hnsw:space": "cosine"}).delete(where={"file_path": file_path})
     
 
 # todo FIXED! Images werent being considered.
@@ -79,11 +79,11 @@ def needs_indexing(file_path: str) -> bool:
     with _INDEX_LOCK:
         current_hash = file_hash(file_path)
 
-        collection = get_client().get_or_create_collection("text_chunks")
+        collection = get_client().get_or_create_collection("text_chunks", metadata={"hnsw:space": "cosine"})
         existing = collection.get(where={"file_path": file_path})
         
         if not existing["ids"]:
-            img_collection = get_client().get_or_create_collection("images")
+            img_collection = get_client().get_or_create_collection("images", metadata={"hnsw:space": "cosine"})
             existing_img = img_collection.get(where={"file_path": file_path})
             if not existing_img["ids"]:
                 return True
@@ -101,7 +101,7 @@ def store_chunks(file_path: str, chunks: list[str]):
         embedder = get_embedder()
         client = get_client()
 
-        collection = client.get_or_create_collection("text_chunks")
+        collection = client.get_or_create_collection("text_chunks", metadata={"hnsw:space": "cosine"})
 
         hash_ = file_hash(file_path)
         meta_base = file_metadata(file_path)
@@ -125,7 +125,7 @@ def store_image(file_path: str):
         embedding = embed_image(file_path)
 
         client = get_client()
-        collection = client.get_or_create_collection("images")
+        collection = client.get_or_create_collection("images", metadata={"hnsw:space": "cosine"})
         hash_ = file_hash(file_path)
         meta_base = file_metadata(file_path)
 
