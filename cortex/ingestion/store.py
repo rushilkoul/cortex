@@ -27,12 +27,14 @@ def file_metadata(path: str) -> dict:
     }
 
 def try_index(file_path: str) -> None:
+    # logger.log(f"!!!!!!!!! index function called: {file_path}")
     with _INDEX_LOCK:
         path = Path(file_path)
         if not path.exists() or path.is_dir():
             return
 
         suffix = path.suffix.lower()
+        # logger.log(f"!!!!!!!!! trying to index {file_path}")
 
         if suffix in IMAGE_EXTENSIONS:
             try:

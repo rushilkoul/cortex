@@ -1,5 +1,6 @@
-import atexit
 from halo import Halo
+import signal
+import sys
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -16,7 +17,13 @@ def start_shell():
         get_clip()
         llm = LocalLLM()
 
-    atexit.register(stop_server)
+    def _handle_exit(signum, frame):
+        stop_server()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, _handle_exit)
+    signal.signal(signal.SIGTERM, _handle_exit)
+    
     with Halo(text="\033[2mstarting Chroma server\033[0m", spinner="dots"):
         start_server()
 

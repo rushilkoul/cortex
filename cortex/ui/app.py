@@ -10,7 +10,7 @@ class Api:
         self._loading = False
 
     def whoami(self) -> str:
-        return getpass.getuser().capitalize()
+        return getpass.getuser()
 
     def _ensure_llm(self):
         if self.llm is None:
@@ -45,11 +45,20 @@ class Api:
 
 
 def start_ui():
-    from cortex.shared.models import start_server
+    from cortex.shared.models import start_server, stop_server
     from cortex.ingestion.watcher import start_watcher
 
     start_server()
     start_watcher()
+    import signal
+    import sys
+
+    def _handle_exit(signum, frame):
+        stop_server()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, _handle_exit)
+    signal.signal(signal.SIGTERM, _handle_exit)
 
     api = Api()
     webview.create_window("Cortex", str(UI_DIR / "index.html"), js_api=api, width=900, height=700)
