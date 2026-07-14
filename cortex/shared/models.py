@@ -14,6 +14,15 @@ _init_lock = threading.RLock()
 
 def start_server():
     global _server_process
+
+    try:
+        test_client = chromadb.HttpClient(host="localhost", port=8000)
+        test_client.heartbeat()
+        logger.log("[LOG] Reusing already-running Chroma server.")
+        return
+    except Exception:
+        pass  # nothing running, safe to start one
+
     logger.clear_logs()
     _server_process = subprocess.Popen(
         ["chroma", "run", "--path", "./chroma_db"],

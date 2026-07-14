@@ -5,7 +5,7 @@ import time
 import tomllib
 from watchdog import events
 from watchdog.observers import Observer
-from cortex.ingestion.store import try_index, bulk_index_all
+from cortex.ingestion.store import try_index, bulk_index_all, delete_file
 from cortex.shared.logger import logger
 from pathlib import Path
 
@@ -37,33 +37,30 @@ class EventHandler(events.FileSystemEventHandler):
 
         super().dispatch(event)
 
-    def on_created(self, event: events.DirCreatedEvent | events.FileCreatedEvent) -> None:
+    def on_created(self, event):
         if event.is_directory:
-            logger.log(f"[DIR CREATED] {event.src_path}")
-        else:
-            logger.log(f"[FILE CREATED] {event.src_path}")
+            return 
+        logger.log(f"[FILE CREATED] {event.src_path}")
+        try_index(event.src_path)
 
-            try_index(event.src_path)
+    def on_modified(self, event):
+        if event.is_directory:
+            return
+        logger.log(f"[FILE MODIFIED] {event.src_path}")
+        try_index(event.src_path)
 
-    def on_deleted(self, event: events.DirDeletedEvent | events.FileDeletedEvent) -> None:
+    def on_deleted(self, event):
         if event.is_directory:
-            logger.log(f"[DIR DELETED] {event.src_path}")
-        else:
-            logger.log(f"[FILE DELETED] {event.src_path}")
+            return
+        logger.log(f"[FILE DELETED] {event.src_path}")
+        delete_file(event.src_path)
 
-    def on_modified(self, event: events.DirModifiedEvent | events.FileModifiedEvent) -> None:
+    def on_moved(self, event):
         if event.is_directory:
-            logger.log(f"[DIR MODIFIED] {event.src_path}")
-        else:
-            logger.log(f"[FILE MODIFIED] {event.src_path}")
-            try_index(event.src_path)
-    
-    # when a file is moved OR *renamed*
-    def on_moved(self, event: events.DirMovedEvent | events.FileMovedEvent) -> None:
-        if event.is_directory:
-            logger.log(f"[DIR MOVED] {event.src_path} ==> {event.dest_path}")
-        else:
-            logger.log(f"[FILE MOVED] {event.src_path} ==> {event.dest_path}")
+            return
+        logger.log(f"[FILE MOVED] {event.src_path} ==> {event.dest_path}")
+        delete_file(event.src_path)
+        try_index(event.dest_path)
 
 # starts tracking files
 def start_watcher():
