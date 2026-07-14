@@ -61,7 +61,7 @@ def start_ui():
     from cortex.ingestion.watcher import start_watcher
 
     start_server()
-    start_watcher()
+    observer = start_watcher()
     import signal
     import sys
 
@@ -74,4 +74,9 @@ def start_ui():
 
     api = Api()
     webview.create_window("Cortex", str(UI_DIR / "index.html"), js_api=api, width=900, height=700)
-    webview.start(gui="qt")
+    try:
+        webview.start(gui="qt")
+    finally:
+        observer.stop()
+        observer.join()
+        stop_server()
