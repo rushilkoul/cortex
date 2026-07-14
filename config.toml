@@ -6,7 +6,7 @@ llm_filename = "qwen2.5-1.5b-instruct-q4_k_m.gguf"
 
 [tracker]
 directories = [
-    "/home/rushil/Desktop/Projects/velvet"
+    "/home/ssrivastava/Downloads/test/"
 ]
 
 [logger]
@@ -19,3 +19,4 @@ store_logs = true
 similarity_threshold = 0.7
 # caliberated at 0.7
 # tested 40 queries over 18 files (less sample size, but yeah for rn it works)
+image_similarity_threshold = 0.75

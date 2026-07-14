@@ -21,6 +21,15 @@ def _get_similarity_threshold(config_path: str = "config.toml") -> float:
     so that this does not hard crash
     """
 
+def _get_image_similarity_threshold(config_path: str = "config.toml") -> float:
+    try:
+        with open(config_path, "rb") as f:
+            config = tomllib.load(f)
+        return config.get("retrieval", {}).get("image_similarity_threshold", 0.75)
+    
+    except FileNotFoundError:
+        return 0.75
+
 def search_text(query: str, k: int = 5, threshold: float | None = None) -> list[dict]:
     if threshold is None:
         threshold = _get_similarity_threshold()
@@ -54,7 +63,7 @@ def search_text(query: str, k: int = 5, threshold: float | None = None) -> list[
 
 def search_image(query: str, k: int = 5, threshold: float | None = None) -> list[dict]:
     if threshold is None:
-        threshold = _get_similarity_threshold()
+        threshold = _get_image_similarity_threshold()
 
     model, _, tokenizer, device = get_clip()
 
@@ -86,10 +95,11 @@ def search_image(query: str, k: int = 5, threshold: float | None = None) -> list
 
 
 def search(query: str, k: int = 5) -> list[dict]:
-    threshold = _get_similarity_threshold()
+    text_threshold = _get_similarity_threshold()
+    image_threshold = _get_image_similarity_threshold()
 
-    text_results = search_text(query, k=k, threshold=threshold)
-    image_results = search_image(query, k=k, threshold=threshold)
+    text_results = search_text(query, k=k, threshold=text_threshold)
+    image_results = search_image(query, k=k, threshold=image_threshold)
 
     combined = text_results + image_results
     combined.sort(key=lambda r: r["score"])

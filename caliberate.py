@@ -71,6 +71,78 @@ QUERIES = [
 
 ]
 
+IMAGE_QUERIES = [
+   
+    # RELEVANT
+    
+    ("golden gate bridge", "relevant"),
+    ("planet saturn", "relevant"),
+    ("bald eagle", "relevant"),
+    ("mount everest", "relevant"),
+    ("eiffel tower", "relevant"),
+    ("red sports car", "relevant"),
+    ("steam locomotive", "relevant"),
+    ("honey bee on flower", "relevant"),
+    ("mechanical wristwatch", "relevant"),
+    ("limestone cave", "relevant"),
+    ("polar bear", "relevant"),
+    ("wind turbines", "relevant"),
+    ("cargo container ship", "relevant"),
+    ("coral reef", "relevant"),
+    ("chess board", "relevant"),
+    ("volcano eruption", "relevant"),
+    ("bamboo forest", "relevant"),
+    ("space shuttle launch", "relevant"),
+    ("bengal tiger", "relevant"),
+    ("city skyline at night", "relevant"),
+    ("taj mahal", "relevant"),
+    ("white marble mausoleum", "relevant"),
+
+    # PARTIALLY RELEVANT
+
+    ("famous suspension bridge in california", "partial"),      # Golden Gate
+    ("ringed planet", "partial"),                               # Saturn
+    ("bird symbol of the united states", "partial"),            # Bald Eagle
+    ("highest mountain on earth", "partial"),                   # Everest
+    ("iconic paris landmark", "partial"),                       # Eiffel
+    ("luxury performance automobile", "partial"),               # Sports car
+    ("old railway engine", "partial"),                          # Steam locomotive
+    ("important crop pollinator", "partial"),                   # Bee
+    ("analog luxury timepiece", "partial"),                     # Watch
+    ("underground rock formation", "partial"),                  # Cave
+    ("arctic predator", "partial"),                             # Polar bear
+    ("renewable electricity generation", "partial"),            # Wind turbines
+    ("ocean freight transportation", "partial"),                # Container ship
+    ("marine ecosystem", "partial"),                            # Coral reef
+    ("strategy board game", "partial"),                         # Chess
+    ("active mountain releasing lava", "partial"),              # Volcano
+    ("dense green bamboo grove", "partial"),                    # Bamboo
+    ("rocket carrying astronauts", "partial"),                  # Shuttle
+    ("largest wild cat in india", "partial"),                   # Tiger
+    ("famous indian monument", "partial"),                      # Taj Mahal
+
+    # IRRELEVANT
+
+    ("python programming code", "irrelevant"),
+    ("recipe for lasagna", "irrelevant"),
+    ("stock market candlestick chart", "irrelevant"),
+    ("basketball player dunking", "irrelevant"),
+    ("medical x ray image", "irrelevant"),
+    ("dna double helix", "irrelevant"),
+    ("laptop on office desk", "irrelevant"),
+    ("coffee mug on wooden table", "irrelevant"),
+    ("formula one race car", "irrelevant"),
+    ("microscope in laboratory", "irrelevant"),
+    ("electric guitar performance", "irrelevant"),
+    ("satellite circuit board", "irrelevant"),
+    ("ancient greek temple", "irrelevant"),
+    ("cooking ingredients on kitchen counter", "irrelevant"),
+    ("astronaut floating inside space station", "irrelevant"),
+    ("football stadium crowd", "irrelevant"),
+    ("dog running in a park", "irrelevant"),     #??
+    ("golden retriever puppy", "irrelevant"),
+]
+
 # k=40 and threshold=999 so NOTHING gets filtered out -- we want raw scores
 K = 40
 THRESHOLD = 999
