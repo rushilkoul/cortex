@@ -7,6 +7,9 @@ from collections import deque
 import tomllib
 import tomlkit
 import os
+import subprocess
+from sys import platform
+from cortex.ingestion.clip import make_thumbnail_base64
 
 CONFIG_PATH = "config.toml"
 UI_DIR = Path(__file__).parent / "static"
@@ -58,6 +61,13 @@ class Api:
         
         self.chat_history.append({"role": "User", "content": query})
         self.chat_history.append({"role": "Cortex", "content": answer})
+
+        for r in results:
+            if r["type"] == "image":
+                try:
+                    r["thumbnail"] = make_thumbnail_base64(r["file_path"])
+                except Exception:
+                    r["thumbnail"] = None
         
         return {"answer": answer, "results": results}
     
@@ -105,6 +115,18 @@ class Api:
         if result and len(result) > 0:
             return result[0]
         return None
+    
+    def open_file(self, path: str):
+        try:
+            if platform.startswith("win"):
+                os.startfile(path)
+            elif platform == "Darwin":
+                subprocess.run(["open", path])
+            else:
+                subprocess.run(["xdg-open", path])
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+        return {"ok": True}
 
 def start_ui():
     from cortex.shared.models import start_server, stop_server

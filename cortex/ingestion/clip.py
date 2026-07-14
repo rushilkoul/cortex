@@ -19,6 +19,17 @@ def embed_image(image_path: str) -> list[float]:
 
     return features.squeeze(0).cpu().tolist() #normal python list to store in chromaDB
 
+import base64
+from io import BytesIO
+
+def make_thumbnail_base64(file_path: str, max_size: int = 120) -> str:
+    img = Image.open(file_path).convert("RGB")
+    img.thumbnail((max_size, max_size))
+    buf = BytesIO()
+    img.save(buf, format="JPEG", quality=70)
+    encoded = base64.b64encode(buf.getvalue()).decode("utf-8")
+    return f"data:image/jpeg;base64,{encoded}"
+
 # #test
 # if __name__ == "__main__":
 #     taj1 = embed_image("/home/ssrivastava/Downloads/test/taj1.jpg")

@@ -141,8 +141,10 @@ function renderResultsHtml(results) {
   return results.map(r => {
     const isImage = r.type === "image";
     const thumb = isImage
-      ? `<div class="result-thumb"><img src="file://${r.file_path}" loading="lazy"></div>`
-      : `<div class="result-thumb text-icon">◆</div>`;
+    ? `<div class="result-thumb" data-path="${escapeHtmlAttr(r.file_path)}">
+        ${r.thumbnail ? `<img src="${r.thumbnail}">` : ""}
+      </div>`
+    : `<div class="result-thumb text-icon">◆</div>`;
     const snippet = isImage
       ? ""
       : `<div class="result-snippet">${escapeHtml((r.content || "").slice(0, 140))}</div>`;
@@ -217,10 +219,17 @@ async function runQuery(query) {
     answerEl.innerHTML = marked.parse(answer);
     resultsEl.innerHTML = renderResultsHtml(results);
 
+    
     if (results && results.length > 0) {
       toggleEl.style.display = "inline-flex";
       toggleEl.querySelector(".toggle-label").textContent =
-        `${results.length} source${results.length > 1 ? "s" : ""}`;
+      `${results.length} source${results.length > 1 ? "s" : ""}`;
+      
+      document.querySelectorAll(".result").forEach(el => {
+        el.addEventListener("click", () => {
+          window.pywebview.api.open_file(el.dataset.path);
+        });
+      });
     }
 
     setStatus("ready", "ready");

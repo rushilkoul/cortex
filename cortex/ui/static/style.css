@@ -373,6 +373,7 @@ body {
     padding: 9px 10px;
     border-radius: 7px;
     transition: background 0.1s ease;
+    cursor: pointer !important;
 }
 
 .result:hover {
