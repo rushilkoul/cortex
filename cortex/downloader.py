@@ -1,5 +1,12 @@
 from halo import Halo
 import sys
+import tomllib
+
+with open("./config.toml", "rb") as f:
+    config = tomllib.load(f)
+
+llm_repo = config["models"]["llm_repo"]
+llm_filename = config["models"]["llm_filename"]
 
 
 def download_models():
@@ -16,7 +23,7 @@ def download_models():
         },
         {
             "name": "LLM",
-            "text": "Caching LLM (Qwen2.5-1.5B)...",
+            "text": f"Caching LLM ({llm_repo})...",
             "fn": _download_llm,
         },
     ]
@@ -53,8 +60,8 @@ def _download_llm():
     from llama_cpp import Llama
 
     Llama.from_pretrained(
-        repo_id="Qwen/Qwen2.5-1.5B-Instruct-GGUF",
-        filename="*q4_k_m.gguf",
+        repo_id=llm_repo,
+        filename=llm_filename,
         n_ctx=4096,
         n_gpu_layers=-1,
         verbose=False,
