@@ -6,7 +6,7 @@ llm_filename = "qwen2.5-1.5b-instruct-q4_k_m.gguf"
 
 [tracker]
 directories = [
-    "/home/kavoya/projects/velvet",
+    "/home/ssrivastava/Downloads/test/",
 ]
 
 [logger]
@@ -14,3 +14,8 @@ logs_file_name = "logs"
 logs_file_location = "."
 print_logs = false
 store_logs = true
+
+[retrieval]
+similarity_threshold = 0.7
+# caliberated at 0.7
+# tested 40 queries over 18 files (less sample size, but yeah for rn it works)
