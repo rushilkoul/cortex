@@ -1,8 +1,41 @@
 import re
+from sentence_transformers import SentenceTransformer
+from cortex.shared.models import get_embedder
+
+# takes text as input and returns list of tokens
+
+def tokenize(text: str) -> list[int]:
+    model = get_embedder()
+    tokenizer = model.tokenizer
+
+    return tokenizer.encode(text, add_special_tokens=False)
+
+def detokenize(tokens: list[int]) -> str:
+    model = get_embedder()
+    tokenizer = model.tokenizer
+
+    return tokenizer.decode(tokens, skip_special_tokens=True)
+
+
+def chunk_text(text: str) -> list[str]:
+    chunks = []
+    tokens_per_chunk = 200
+    chunk_overlap = 50
+    
+    #paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+
+    step = tokens_per_chunk - chunk_overlap
+    tokens = tokenize(text)
+    for i in range(0, len(tokens), step):
+        chunks.append(detokenize(tokens[i:i + tokens_per_chunk]))
+
+    #print(chunks)
+    return chunks
 
 """
 simple text 500 character chunker
 very naive but im going to use it for now
+"""
 """
 def chunk_text(text: str, max_chars: int = 500) -> list[str]:
     paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
@@ -21,7 +54,7 @@ def chunk_text(text: str, max_chars: int = 500) -> list[str]:
         chunks.append(current)
 
     return chunks
-
+"""
 
 # leaving a note for my teammates here:
 # Its a good idea to chunk different kinds of files differently.

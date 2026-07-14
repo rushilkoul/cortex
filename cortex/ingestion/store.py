@@ -1,4 +1,5 @@
 from pathlib import Path 
+from markitdown import MarkItDown
 import hashlib
 import os
 import threading
@@ -7,12 +8,14 @@ import tomllib
 from cortex.shared.models import get_embedder, get_client
 from cortex.shared.logger import logger
 from cortex.ingestion.clip import embed_image
-from cortex.ingestion.chunking import chunk_markdown
+from cortex.ingestion.chunking import chunk_markdown, chunk_text
 
-TEXT_EXTENSIONS = {".md", ".markdown"}
+TEXT_EXTENSIONS = {".md", ".markdown", ".txt", ".docx", ".pdf"}
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 _INDEX_LOCK = threading.RLock()
+
+md = MarkItDown()
 
 def file_metadata(path: str) -> dict:
     stat = os.stat(path)
@@ -50,7 +53,12 @@ def try_index(file_path: str) -> None:
             return
 
         try:
-            text = path.read_text(encoding="utf-8")
+            if suffix == ".md" or suffix == ".markdown" or suffix == ".txt":
+                text = path.read_text(encoding="utf-8")
+                #text = md.convert(path).text_content
+            else:
+                # converting a doc to markdown
+                text = md.convert(path).text_content
         except (UnicodeDecodeError, PermissionError, FileNotFoundError) as e:
             logger.log(f"[SKIPPED UNREADABLE] {file_path}: {e}")
             return
@@ -60,7 +68,7 @@ def try_index(file_path: str) -> None:
 
         try:
             if needs_indexing(file_path):
-                chunks = chunk_markdown(text)
+                chunks = chunk_text(text)
                 if chunks:
                     store_chunks(file_path, chunks)
             else:
