@@ -9,6 +9,8 @@ from cortex.ingestion.store import try_index, bulk_index_all, delete_file
 from cortex.shared.logger import logger
 from pathlib import Path
 
+observer = None
+
 class EventHandler(events.FileSystemEventHandler):
 
     def dispatch(self, event):
@@ -64,6 +66,7 @@ class EventHandler(events.FileSystemEventHandler):
 
 # starts tracking files
 def start_watcher():
+    global observer
     event_handler = EventHandler()
 
     observer = Observer()
@@ -96,6 +99,16 @@ def stop_watcher(observer):
     observer.stop()
     observer.join()
 
+
+def add_watch_path(path: str):
+    if observer:
+        observer.schedule(EventHandler(), path, recursive=True)
+        logger.log(f"[LOG] Now watching: {path}")
+
+        # bulk-index this new folder right away so it's searchable immediately
+        import threading
+        from cortex.ingestion.store import bulk_index_directory
+        threading.Thread(target=bulk_index_directory, args=(path,), daemon=True).start()
 
 # in case we want to run this file separately (For testing)
 # python -m ingestion.watcher

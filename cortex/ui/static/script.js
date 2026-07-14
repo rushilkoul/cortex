@@ -8,6 +8,17 @@ const statusEl = document.getElementById("status");
 const greetingEl = document.getElementById("greeting");
 const subtextEl = document.getElementById("subtext");
 
+const settingsBtn = document.getElementById("settings-btn");
+const settingsOverlay = document.getElementById("settings-overlay");
+const settingsClose = document.getElementById("settings-close");
+const settingsList = document.getElementById("settings-list");
+const settingsError = document.getElementById("settings-error");
+const newPathInput = document.getElementById("new-path-input");
+const addPathBtn = document.getElementById("add-path-btn");
+const browsePathBtn = document.getElementById("browse-path-btn");
+const settingsNavItems = document.querySelectorAll(".settings-nav-item");
+const settingsSections = document.querySelectorAll(".settings-section");
+
 let ready = false;
 let busy = false;
 let hasStartedChat = false;
@@ -186,6 +197,7 @@ queryChat.addEventListener("keydown", (e) => {
 
 document.addEventListener("click", () => {
   if (busy) return;
+  if (settingsOverlay.classList.contains("visible")) return;
   if (hasStartedChat) queryChat.focus();
   else queryLanding.focus();
 });
@@ -206,3 +218,138 @@ setTimeout(() => {
     window.pywebview.api.warm_up();
   }
 }, 3000);
+
+// ============ SETTINGS PANEL ============
+
+function escapeHtmlAttr(str) {
+  return str.replace(/"/g, "&quot;");
+}
+
+async function loadDirectories() {
+  settingsList.innerHTML = `<div class="settings-empty">loading…</div>`;
+  try {
+    const dirs = await window.pywebview.api.list_directories();
+    renderDirectories(dirs);
+  } catch (err) {
+    settingsList.innerHTML = `<div class="settings-empty">couldn't load folders</div>`;
+    console.error(err);
+  }
+}
+
+function renderDirectories(dirs) {
+  if (!dirs || dirs.length === 0) {
+    settingsList.innerHTML = `<div class="settings-empty">no folders tracked yet</div>`;
+    return;
+  }
+  settingsList.innerHTML = dirs.map(d => `
+    <div class="settings-list-item">
+      <span class="settings-list-path">${escapeHtml(d)}</span>
+      <button class="settings-list-remove" data-path="${escapeHtmlAttr(d)}">remove</button>
+    </div>
+  `).join("");
+
+  settingsList.querySelectorAll(".settings-list-remove").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const path = btn.dataset.path;
+      btn.disabled = true;
+      btn.textContent = "…";
+      try {
+        const res = await window.pywebview.api.remove_directory(path);
+        if (res.ok) {
+          loadDirectories();
+        } else {
+          settingsError.textContent = res.error;
+        }
+      } catch (err) {
+        settingsError.textContent = "Failed to remove folder.";
+        console.error(err);
+      }
+    });
+  });
+}
+
+async function addDirectory() {
+  const path = newPathInput.value.trim();
+  if (!path) return;
+
+  settingsError.textContent = "";
+  addPathBtn.disabled = true;
+
+  try {
+    const res = await window.pywebview.api.add_directory(path);
+    if (res.ok) {
+      newPathInput.value = "";
+      loadDirectories();
+    } else {
+      settingsError.textContent = res.error;
+    }
+  } catch (err) {
+    settingsError.textContent = "Failed to add folder.";
+    console.error(err);
+  } finally {
+    addPathBtn.disabled = false;
+  }
+}
+
+function openSettings() {
+  settingsOverlay.classList.add("visible");
+  settingsError.textContent = "";
+  loadDirectories();
+  setTimeout(() => newPathInput.focus(), 50);
+}
+
+function closeSettings() {
+  settingsOverlay.classList.remove("visible");
+  if (hasStartedChat) queryChat.focus();
+  else queryLanding.focus();
+}
+
+settingsBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  openSettings();
+});
+
+settingsClose.addEventListener("click", (e) => {
+  e.stopPropagation();
+  closeSettings();
+});
+
+settingsOverlay.addEventListener("click", (e) => {
+  if (e.target === settingsOverlay) closeSettings();
+});
+
+addPathBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  addDirectory();
+});
+
+newPathInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") addDirectory();
+});
+
+browsePathBtn.addEventListener("click", async (e) => {
+  e.stopPropagation();
+  try {
+    const path = await window.pywebview.api.pick_folder();
+    if (path) {
+      newPathInput.value = path;
+      addDirectory();
+    }
+  } catch (err) {
+    settingsError.textContent = "Couldn't open folder picker.";
+    console.error(err);
+  }
+});
+
+settingsNavItems.forEach(item => {
+  item.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const target = item.dataset.section;
+
+    settingsNavItems.forEach(i => i.classList.remove("active"));
+    item.classList.add("active");
+
+    settingsSections.forEach(s => s.classList.remove("active"));
+    document.getElementById(`section-${target}`).classList.add("active");
+  });
+});

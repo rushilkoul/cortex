@@ -1,84 +1,86 @@
-def build_prompt(query: str, results: list[dict], history: list[dict] = None) -> str:
-    
-    history_str = ""
-    if history:
-        history_str = "==========================\nRECENT CHAT HISTORY\n\n"
-        for msg in history:
-            history_str += f"{msg['role']}:\n{msg['content']}\n\n"
+from typing import Sequence
 
-   
-    if not results:
-        return f"""
-You are Cortex, an offline semantic memory assistant.
+SYSTEM_PROMPT = """\
+You are Cortex, a local-first AI assistant that helps users search, understand, and reason about their own files while also being a capable conversational assistant.
 
-{history_str}==========================
+You may be given excerpts retrieved from the user's indexed files. These excerpts are the ONLY source of truth about the user's personal data. Never invent facts about the user's files.
 
-The user asked:
+Behavior:
 
-{query}
+1. If relevant retrieved context exists:
+- Use it as the primary source of truth.
+- Synthesize information across multiple excerpts when appropriate.
+- You may use your own general knowledge to explain concepts, but never pretend that general knowledge came from the user's files.
 
-No relevant files were found.
+2. If no relevant context exists:
+- If the user's question is general knowledge, answer it normally.
+- If the user is clearly asking about their own notes, documents, projects, or images, explain that you couldn't find anything relevant instead of making something up.
 
-Tell the user politely that nothing matching their query was found.
-Do not invent any information.
-""".strip()
+3. Be conversational.
+- Respond naturally to follow-up questions.
+- Understand references like "that", "it", or "elaborate" using the conversation history.
+- Do not repeatedly mention retrieval or your limitations.
 
-  
-    context_parts = []
-    for r in results:
-        if r["type"] == "text":
-            context_parts.append(
-                f"""
-==========================
-TEXT FILE
+4. Never fabricate information about the user's files.
+"""
 
-Path:
-{r['file_path']}
+
+def build_prompt(
+    query: str,
+    results: Sequence[dict],
+    history: Sequence[tuple[str, str]] | None = None,
+) -> str:
+    """
+    history = [
+        ("user", "..."),
+        ("assistant", "..."),
+        ...
+    ]
+    """
+
+    if history is None:
+        history = []
+
+    if results:
+        context = "\n\n".join(
+            f"""\
+Source: {r["file_path"]}
 
 Content:
-{r['content']}
+{r.get("content", "[Image]")}
 """
-            )
-        elif r["type"] == "image":
-            context_parts.append(
-                f"""
-==========================
-IMAGE FILE
+            for r in results
+        )
+    else:
+        context = "(No relevant documents were retrieved.)"
 
-Path:
-{r['file_path']}
+    conversation = "\n".join(
+        f"{role.title()}: {message}"
+        for role, message in history
+    )
 
-Note:
-This image matched the semantic search.
-"""
-            )
+    if not conversation:
+        conversation = "(No previous conversation.)"
 
-    context = "\n".join(context_parts)
+    return f"""{SYSTEM_PROMPT}
 
-    
-    return f"""
-You are Cortex, an offline semantic memory assistant.
-
-Your task is to answer the user's question ONLY using the retrieved context below.
-
-Rules:
-- Only use the retrieved context.
-- Do not use outside knowledge.
-- Never invent file names.
-- If the answer cannot be determined, clearly say so.
-- Mention relevant file paths whenever helpful.
-
-Retrieved Context:
+==============================
+Retrieved Context
+==============================
 
 {context}
 
-{history_str}==========================
+==============================
+Conversation History
+==============================
 
-USER QUESTION
+{conversation}
+
+==============================
+User Question
+==============================
 
 {query}
 
-==========================
-
-ANSWER:
-""".strip()
+Answer:
+"""
