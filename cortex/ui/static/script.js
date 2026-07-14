@@ -7,6 +7,8 @@ const queryChat = document.getElementById("query-chat");
 const statusEl = document.getElementById("status");
 const greetingEl = document.getElementById("greeting");
 const subtextEl = document.getElementById("subtext");
+const themeBtn = document.getElementById("theme-btn");
+const themeBtnLabel = document.getElementById("theme-btn-label");
 
 const settingsBtn = document.getElementById("settings-btn");
 const settingsOverlay = document.getElementById("settings-overlay");
@@ -22,6 +24,24 @@ const settingsSections = document.querySelectorAll(".settings-section");
 let ready = false;
 let busy = false;
 let hasStartedChat = false;
+function readThemePreference() {
+  try {
+    return localStorage.getItem("cortex-theme");
+  } catch (e) {
+    return null;
+  }
+}
+
+function writeThemePreference(theme) {
+  try {
+    localStorage.setItem("cortex-theme", theme);
+  } catch (e) {
+    // Ignore storage failures in restricted WebView contexts.
+  }
+}
+
+let themePreference = readThemePreference();
+const themeQuery = window.matchMedia("(prefers-color-scheme: light)");
 
 const SUBTEXTS = [
   "Ready to dive in?",
@@ -73,6 +93,37 @@ function setStatus(text, mode) {
   statusEl.textContent = text;
   statusEl.classList.remove("ready", "thinking");
   if (mode) statusEl.classList.add(mode);
+}
+
+function getSystemTheme() {
+  return themeQuery.matches ? "light" : "dark";
+}
+
+function getActiveTheme() {
+  return themePreference || getSystemTheme();
+}
+
+function applyTheme(theme) {
+  const resolved = theme === "light" ? "light" : "dark";
+  document.documentElement.dataset.theme = resolved;
+  document.documentElement.style.colorScheme = resolved;
+  if (themeBtnLabel) {
+    themeBtnLabel.textContent = resolved === "dark" ? "light" : "dark";
+  }
+  if (themeBtn) {
+    const nextTheme = resolved === "dark" ? "light" : "dark";
+    themeBtn.title = `Switch to ${nextTheme} mode`;
+    themeBtn.setAttribute("aria-label", `Switch to ${nextTheme} mode`);
+  }
+}
+
+function setTheme(theme, persist = true) {
+  const resolved = theme === "light" ? "light" : "dark";
+  if (persist) {
+    themePreference = resolved;
+    writeThemePreference(resolved);
+  }
+  applyTheme(resolved);
 }
 
 function scrollToBottom() {
@@ -209,6 +260,21 @@ window.addEventListener("pywebviewready", () => {
   queryLanding.focus();
   window.pywebview.api.warm_up();
 });
+
+setTheme(getActiveTheme(), false);
+
+if (!themePreference && themeQuery.addEventListener) {
+  themeQuery.addEventListener("change", () => {
+    applyTheme(getActiveTheme());
+  });
+}
+
+if (themeBtn) {
+  themeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setTheme(getActiveTheme() === "dark" ? "light" : "dark");
+  });
+}
 
 setTimeout(() => {
   if (!ready) {

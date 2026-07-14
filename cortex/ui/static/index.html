@@ -3,6 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <title>Cortex</title>
+<script>
+  (function () {
+    var storedTheme = null;
+    try {
+      storedTheme = localStorage.getItem("cortex-theme");
+    } catch (e) {
+      storedTheme = null;
+    }
+    var systemTheme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    var theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : systemTheme;
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  })();
+</script>
 <link rel="stylesheet" href="style.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.0/marked.min.js"></script>
@@ -16,6 +30,9 @@
     </div>
     <div class="topbar-right">
       <div class="status" id="status">warming up…</div>
+      <button class="theme-btn" id="theme-btn" title="Switch theme" aria-label="Switch theme">
+        <span class="theme-btn-label" id="theme-btn-label">light</span>
+      </button>
       <button class="settings-btn" id="settings-btn" title="Manage tracked folders">⚙</button>
     </div>
   </header>

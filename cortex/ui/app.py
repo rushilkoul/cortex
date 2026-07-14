@@ -117,7 +117,7 @@ def start_ui():
     window = webview.create_window("Cortex", str(UI_DIR / "index.html"), js_api=api, width=900, height=700)
     api.window = window 
     try:
-        webview.start(gui="qt")
+        webview.start(gui="qt", private_mode=False)
     finally:
         observer.stop()
         observer.join()

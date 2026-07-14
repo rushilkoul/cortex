@@ -23,10 +23,27 @@
     --accent-dim: #3d5a8a;
     --accent-soft: rgba(111, 158, 255, 0.10);
     --border: #21252b;
+    --overlay: rgba(0, 0, 0, 0.5);
+    --panel-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 
     --font-sans: "Google Sans", system-ui, sans-serif;
     --font-serif: "Source Serif 4", Georgia, serif;
     --font-mono: "Cascadia Code", "SF Mono", Consolas, monospace;
+}
+
+:root[data-theme="light"] {
+    --bg: #f4f6f8;
+    --bg-raised: #ffffff;
+    --bg-hover: #e9edf3;
+    --bg-bubble-user: #dde4ed;
+    --text: #10151c;
+    --text-dim: #5f6875;
+    --accent: #3f6fff;
+    --accent-dim: #3657b4;
+    --accent-soft: rgba(63, 111, 255, 0.12);
+    --border: #d8dee6;
+    --overlay: rgba(13, 18, 25, 0.18);
+    --panel-shadow: 0 20px 60px rgba(13, 18, 25, 0.14);
 }
 
 * {
@@ -42,6 +59,12 @@ body {
     font-family: var(--font-sans);
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
+    color-scheme: dark;
+}
+
+html[data-theme="light"],
+html[data-theme="light"] body {
+    color-scheme: light;
 }
 
 body {
@@ -194,7 +217,7 @@ body {
     color: var(--text);
     background: var(--bg-bubble-user);
     padding: 10px 16px;
-    border-radius: 16px 16px 4px 16px;
+    border-radius: 10px;
     max-width: 68%;
 }
 
@@ -479,6 +502,31 @@ body {
     gap: 14px;
 }
 
+.theme-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 5px 9px;
+    border-radius: 999px;
+    transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+.theme-btn:hover {
+    color: var(--text);
+    background: var(--bg-hover);
+}
+
+.theme-btn-label {
+    display: inline-block;
+    min-width: 2.8em;
+    text-align: center;
+}
+
 .settings-btn {
     background: none;
     border: none;
@@ -498,21 +546,7 @@ body {
 .settings-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-}
-
-.settings-overlay.visible {
-    display: flex;
-}
-
-.settings-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--overlay);
     display: none;
     align-items: center;
     justify-content: center;
@@ -533,7 +567,7 @@ body {
     border-radius: 14px;
     display: flex;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--panel-shadow);
 }
 
 .settings-nav {
