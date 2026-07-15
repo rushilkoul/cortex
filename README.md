@@ -204,7 +204,7 @@ compiling `llama-cpp-python` for CUDA. you should see immense performance improv
     </td>
     <td width="50%" align="center">
       <img src="screenshots/settings-menu.png" alt="Settings Menu" width="100%"><br>
-      <sub><b></b></sub>
+      <sub><b>Settings Menu</b></sub>
     </td>
   </tr>
 
