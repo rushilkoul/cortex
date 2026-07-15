@@ -185,10 +185,30 @@ compiling `llama-cpp-python` for CUDA. you should see immense performance improv
 <br>
 
 ## Demo and Screenshots
- 
-<div>
- <h1><b>RUSHIL IDHAR DEMO VIDEOS AUR SCREENSHOTS</b></h1>
-</div>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="screenshots/welcome-page-light.png" alt="Welcome Page - Light mode" width="100%"><br>
+      <sub><b>GUI — light mode</b></sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="screenshots/welcome-page-dark.png" alt="Welcome Page - Dark mode" width="100%"><br>
+      <sub><b>GUI — dark mode</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="screenshots/query-result-dark.png" alt="Semantic search results with source citations" width="100%"><br>
+      <sub><b>Search results with source citations</b></sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="screenshots/settings-menu.png" alt="Image search using CLIP embeddings" width="100%"><br>
+      <sub><b></b></sub>
+    </td>
+  </tr>
+
+</table>
 
 <br>
 
@@ -221,12 +241,15 @@ compiling `llama-cpp-python` for CUDA. you should see immense performance improv
 - Image indexing and search (CLIP)
 - Relevance threshold filtering (separately tuned for text and image results)
 - Bulk re-index of pre-existing files on startup
-- PDF, DOCX, and TXT document support
+- `.PDF`, `.DOCX`, and `.TXT` document support
+- Code files (`.py` & `.cpp`) support
   
 ### Known Limitations
-<div>
- <h1><b>RUSHIL IDHAR LIMITATIONS LIKH DENA YAAD SE</b></h1>
-</div>
+- Indexed files and directories stay stored in the vector database even after being deleted
+- No way to clean/empty the database through CLI or GUI
+- .py and .cpp are the only supported code files
+- The interactive shell is unstable and lacks features that the GUI supports
+
 
 ### Planned
 - Model selector
