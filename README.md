@@ -61,13 +61,34 @@ The LLM, filename, and repo can be swapped by editing `config.toml`.
 | Model and runtime | Text: `all-MiniLM-L6-v2` (`sentence-transformers`) · Image: OpenCLIP `ViT-B-32`, `laion2b_s34b_b79k` weights (`open_clip_torch`) · LLM: `Qwen2.5-1.5B-Instruct` GGUF (`llama-cpp-python`) |
 | Quantization | LLM uses `q4_k_m` (4-bit) quantization by default; configurable in `config.toml` |
 | CPU/GPU/NPU usage | `llama-cpp-python` auto-detects CUDA and offloads to GPU when available (see [Running the model on CUDA](#setup-and-usage)), falls back to CPU otherwise. No NPU support currently. Confirmed via logs: `backend=GPU; requested_gpu_layers=-1` (full GPU offload) on a CUDA-enabled test run. |
-| Warm-up latency (one test run, GPU backend) | Client instantiation: 1.50s · LLM warm-up: 1.74s · Embedder warm-up: 3.45s · CLIP warm-up: 4.14s |
-| Model size | *TODO — not yet measured* |
-| Per-query inference latency | *TODO — not yet benchmarked (the numbers above are one-time startup/warm-up costs, not per-query generation speed)* |
-| Peak memory usage | *TODO — not yet benchmarked* |
-| Tested device specifications | *TODO — CPU/GPU model, RAM not yet documented for the run above* |
+| Warm-up latency (one test run, GPU backend) | Total time-to-ready: **4.14s** (see note below) |
+| Model size (on disk, GGUF `q4_k_m`) | `all-MiniLM-L6-v2`: ~91 MB · OpenCLIP `ViT-B-32` (`laion2b_s34b_b79k`): ~605 MB · `Qwen2.5-1.5B-Instruct`: ~1.12 GB · `Qwen2.5-3B-Instruct`: ~2.1 GB |
+| Per-query latency (warm queries, GPU backend, Device 1) | Retrieval: mean 0.09s, median 0.03s · Generation: mean 0.85s, median 0.87s · End-to-end: mean 0.94s, median 0.90s |
+| Per-query latency (warm queries, CPU/integrated-GPU, Device 3) | Retrieval: mean 0.16s, median 0.13s · Generation: mean 5.42s, median 4.51s · End-to-end: mean 5.58s, median 4.64s |
+| Peak memory usage (Device 1, discrete GPU) | Process RSS: 2311.9 MiB · GPU memory (this process): 3166.0 MiB |
+| Peak memory usage (Device 3, integrated GPU) | Process RSS: 3446.0 MiB · GPU memory: unavailable (no NVIDIA GPU — `nvidia-smi` not present) |
+
+| Tested device specifications | SEE BELOW |
+
+**Devices tested on:**
  
-> Warm-up timings above are from a single logged run on one team member's machine with a CUDA GPU; they show component initialization cost, not per-query response time. Model size, per-query latency, memory usage, and the actual tested hardware spec still need to be captured and documented.
+| | Device 1 | Device 2 | Device 3 |
+|---|---|---|---|
+| Machine | Legion Pro 5 16ARX8 | ASUS VivoBook X515EA | Lenovo Yoga Slim 7i |
+| CPU | AMD Ryzen 9 7945HX (32 threads) @ 5.46 GHz | Intel Core i5-1135G7, 11th Gen (8 threads) @ 4.20 GHz | Intel Core Ultra 5 125H (18 threads) @ 4.50 GHz |
+| GPU | NVIDIA RTX 4060 Max-Q (discrete) + AMD Radeon 610M (integrated) | Intel Iris Xe (integrated) | Intel Arc Graphics (integrated) |
+| RAM | 16 GiB | 8 GiB | 16 GiB |
+| OS | Arch Linux | Fedora Linux 44 (Cinnamon) | Fedora Linux |
+| LLM variant used | Qwen2.5-3B-Instruct | Qwen2.5-1.5B-Instruct | Qwen2.5-1.5B-Instruct |
+
+<br>
+
+> Benchmarked with `benchmark_query.py`, run once each on Device 1 (discrete NVIDIA GPU, 3B model) and Device 3 (integrated GPU only, 1.5B model). Generation is roughly 6x slower on Device 3 with no discrete GPU to offload to, despite running the smaller model — CPU/integrated-GPU inference is clearly the bottleneck. Device 3's GPU memory reads "unavailable" because it has no NVIDIA hardware, not because of a measurement error. Device 2 hasn't been benchmarked yet. Client, embedder, CLIP, and LLM load concurrently on a thread pool at startup, so the per-model "finished in Xs" lines in the raw warm-up log are completion timestamps from a shared start, not isolated per-model durations.
+
+ 
+<br>
+
+> The 4.14s figure above is total time-to-ready from a single logged run on one team member's CUDA-enabled machine — it's a startup cost, not per-query response time. Client, embedder, CLIP, and LLM load concurrently on a thread pool, so the per-model "finished in Xs" lines in the raw log are completion timestamps from a shared start, not isolated per-model durations. Model size, per-query latency, memory usage, and the actual tested hardware spec still need to be captured and documented.
  
 <br>
 
