@@ -7,7 +7,8 @@ llm_filename = "qwen2.5-3b-instruct-q4_k_m.gguf"
 [tracker]
 directories = [
     "/home/rushil/Pictures/Screenshots",
-    "/home/rushil/Desktop/Projects/velvet"
+    "/home/rushil/Desktop/Projects/velvet",
+    "/home/ssrivastava/Downloads/test"
 ]
 
 [logger]
