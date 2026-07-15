@@ -58,11 +58,13 @@ def try_index(file_path: str) -> None:
                 #text = md.convert(path).text_content
             elif suffix == ".docx":
                 # converting a doc to markdown
-                with open("file.docx", "rb") as f:
+                with open(path, "rb") as f:
                     result = mammoth.convert_to_markdown(f)
                     text = result.value
             elif suffix == ".pdf":
-                text = pymupdf4llm.to_markdown("file.pdf")
+                text = pymupdf4llm.to_markdown(path)
+            else:
+                pass
         except (UnicodeDecodeError, PermissionError, FileNotFoundError) as e:
             logger.log(f"[SKIPPED UNREADABLE] {file_path}: {e}")
             return
