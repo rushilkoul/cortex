@@ -7,7 +7,6 @@ from collections import deque
 import tomllib
 import tomlkit
 import os
-import re
 import subprocess
 from sys import platform
 
@@ -15,14 +14,6 @@ CONFIG_PATH = "config.toml"
 UI_DIR = Path(__file__).parent / "static"
 
 class Api:
-    _IMAGE_ONLY_ANSWER = "I found these images."
-    _EXPLANATORY_QUERY = re.compile(
-        r"^(?:what|who|when|where|why|how|which|explain|define|describe|"
-        r"compare|summari[sz]e|tell me|can you|could you|would you|"
-        r"is |are |do |does |did |will |would |should )\b",
-        re.IGNORECASE,
-    )
-
     def __init__(self):
         self.llm = None
         self._loading = False
@@ -117,28 +108,11 @@ Standalone retrieval query:"""
         """Compatibility endpoint for callers that do not render stages."""
         return self.search_rewritten(self._rewrite_search_query(query))
 
-    @staticmethod
-    def _has_only_images(results: list[dict]) -> bool:
-        return bool(results) and all(result.get("type") == "image" for result in results)
-
-    @classmethod
-    def _should_skip_llm_for_images(cls, query: str, results: list[dict]) -> bool:
-        """Only short-circuit a visual lookup, never a question to answer."""
-        return (
-            cls._has_only_images(results)
-            and not cls._EXPLANATORY_QUERY.match(query.strip())
-        )
-
     def _record_exchange(self, query: str, answer: str) -> None:
         self.chat_history.append({"role": "User", "content": query})
         self.chat_history.append({"role": "Cortex", "content": answer})
 
     def generate_answer(self, query: str, results: list[dict]) -> str:
-        if self._should_skip_llm_for_images(query, results):
-            answer = self._IMAGE_ONLY_ANSWER
-            self._record_exchange(query, answer)
-            return {"answer": answer, "results": results}
-
         from cortex.reasoning.prompt import build_prompt
 
         self._ensure_llm()
@@ -157,15 +131,11 @@ Standalone retrieval query:"""
         from cortex.reasoning.prompt import build_prompt
 
         results = search(query, k=5)
-        if self._should_skip_llm_for_images(query, results):
-            answer = self._IMAGE_ONLY_ANSWER
-            self._record_exchange(query, answer)
-        else:
-            self._ensure_llm()
-            history_list = list(self.chat_history)
-            prompt = build_prompt(query, results, history_list)
-            answer = self.llm.generate(prompt)
-            self._record_exchange(query, answer)
+        self._ensure_llm()
+        history_list = list(self.chat_history)
+        prompt = build_prompt(query, results, history_list)
+        answer = self.llm.generate(prompt)
+        self._record_exchange(query, answer)
 
         from cortex.ingestion.clip import make_thumbnail_base64
         for r in results:

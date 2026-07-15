@@ -11,6 +11,9 @@ Behavior:
 - Use it as the primary source of truth.
 - Synthesize information across multiple excerpts when appropriate.
 - You may use your own general knowledge to explain concepts, but never pretend that general knowledge came from the user's files.
+- Retrieved image results are summarized as a count of matching images. This
+  is evidence that matching images were found, so acknowledge it when useful.
+  The local LLM cannot inspect those images; do not invent visual details.
 
 2. If no relevant context exists:
 - If the user's question is general knowledge, answer it normally.
@@ -42,15 +45,32 @@ def build_prompt(
         history = []
 
     if results:
-        context = "\n\n".join(
-            f"""\
-Source: {r["file_path"]}
+        context_parts = []
+        matching_image_count = 0
+        for result in results:
+            source_type = result.get("type", "text")
+
+            if source_type == "image":
+                matching_image_count += 1
+            else:
+                file_path = result.get("file_path", "(unknown path)")
+                score = result.get("score")
+                score_line = f"\nRetrieval distance: {score:.4f}" if isinstance(score, (int, float)) else ""
+                context_parts.append(
+                    f"""\
+Text Result
+Source: {file_path}{score_line}
 
 Content:
-{r.get("content", "[Image]")}
+{result.get("content", "")}
 """
-            for r in results
-        )
+                )
+        if matching_image_count:
+            context_parts.append(
+                f"Found {matching_image_count} matching image"
+                f"{'s' if matching_image_count != 1 else ''}."
+            )
+        context = "\n\n".join(context_parts)
     else:
         context = "(No relevant documents were retrieved.)"
 
