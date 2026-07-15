@@ -21,7 +21,10 @@ dependencies = [
     "pywebview>=6.2.1",
     "qtpy>=2.4.3",
     "mammoth",
-    "pymupdf4llm"
+    "pymupdf4llm",
+    "tree-sitter",
+    "tree-sitter-python",
+    "tree-sitter-cpp"
 ]
 
 [project.scripts]

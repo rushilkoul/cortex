@@ -4,6 +4,7 @@ import threading
 os.environ["HF_HUB_OFFLINE"] = "1"
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from chromadb.config import Settings
 
 import chromadb
 import subprocess
@@ -59,7 +60,7 @@ def get_client():
                 i = 0; 
                 while i < 50:
                     try:                        
-                        _client = chromadb.HttpClient(host="localhost", port=8000)
+                        _client = chromadb.HttpClient(host="localhost", port=8000, settings=Settings(anonymized_telemetry=False))
                         _client.heartbeat()
                         logger.log("[LOG] Client instantiated.")
                         break

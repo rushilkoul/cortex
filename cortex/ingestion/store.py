@@ -10,9 +10,9 @@ import pymupdf4llm
 from cortex.shared.models import get_embedder, get_client
 from cortex.shared.logger import logger
 from cortex.ingestion.clip import embed_image
-from cortex.ingestion.chunking import chunk_markdown, chunk_text
+from cortex.ingestion.chunking import chunk_text, chunk_code
 
-TEXT_EXTENSIONS = {".md", ".markdown", ".txt", ".docx", ".pdf"}
+TEXT_EXTENSIONS = {".md", ".markdown", ".txt", ".docx", ".pdf", ".py", ".python", ".cpp", ".hpp"}
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 _INDEX_LOCK = threading.RLock()
@@ -63,6 +63,8 @@ def try_index(file_path: str) -> None:
                     text = result.value
             elif suffix == ".pdf":
                 text = pymupdf4llm.to_markdown(path)
+            elif suffix in [".py", ".python", ".cpp", ".hpp"]:
+                text = path.read_text(encoding="utf-8")
             else:
                 pass
         except (UnicodeDecodeError, PermissionError, FileNotFoundError) as e:
@@ -74,7 +76,10 @@ def try_index(file_path: str) -> None:
 
         try:
             if needs_indexing(file_path):
-                chunks = chunk_text(text)
+                if suffix in [".py", ".python", ".cpp", ".hpp"]:
+                    chunks = chunk_code(text, suffix)
+                else:
+                    chunks = chunk_text(text)
                 logger.log(f"[LOG] Chunked {file_path}")
                 if chunks:
                     store_chunks(file_path, chunks)
