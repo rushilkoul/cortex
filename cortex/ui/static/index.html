@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cortex</title>
+<script>
+  (function () {
+    var storedTheme = null;
+    try {
+      storedTheme = localStorage.getItem("cortex-theme");
+    } catch (e) {
+      storedTheme = null;
+    }
+    var systemTheme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    var theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : systemTheme;
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  })();
+</script>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.0/marked.min.js"></script>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="mark">
+      <span class="mark-dot"></span>
+      <span class="mark-text">cortex</span>
+    </div>
+    <div class="topbar-right">
+      <div class="status" id="status">warming up…</div>
+      <button class="theme-btn" id="theme-btn" title="Switch theme" aria-label="Switch theme">
+        <span class="theme-btn-label" id="theme-btn-label">light</span>
+      </button>
+      <button class="settings-btn" id="settings-btn" title="Manage tracked folders">⚙</button>
+    </div>
+  </header>
+
+
+  <!-- SETTINGS PANEL — sidebar nav + content pane -->
+  <div class="settings-overlay" id="settings-overlay">
+    <div class="settings-panel">
+      <nav class="settings-nav">
+        <div class="settings-nav-title">Settings</div>
+        <button class="settings-nav-item active" data-section="directories">Tracked Directories</button>
+        <button class="settings-nav-item" data-section="models">Models</button>
+        <button class="settings-close" id="settings-close">Close</button>
+      </nav>
+
+      <div class="settings-content">
+
+        <section class="settings-section active" id="section-directories">
+          <div class="settings-section-header">Tracked Directories</div>
+
+          <div class="settings-add-row">
+            <input id="new-path-input" class="settings-input" placeholder="~/Documents or /path/to/folder" autocomplete="off">
+            <button class="settings-browse-btn" id="browse-path-btn">Browse…</button>
+            <button class="settings-add-btn" id="add-path-btn">Add</button>
+          </div>
+          <div class="settings-error" id="settings-error"></div>
+
+          <div class="settings-list" id="settings-list"></div>
+        </section>
+
+        <section class="settings-section" id="section-models">
+          <div class="settings-section-header">Models</div>
+          <div class="settings-empty">promise ill add it soon.</div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- LANDING STATE: greeting + centered input, shown before first query -->
+  <section class="landing" id="landing">
+    <div class="landing-inner">
+      <h1 class="greeting" id="greeting">Hi.</h1>
+      <p class="subtext" id="subtext">Ready to dive in?</p>
+      <div class="landing-input-wrap">
+        <input
+          id="query-landing"
+          class="search-input search-input--landing"
+          placeholder="Search for anything…"
+          autocomplete="off"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- CHAT STATE: scrolling turns + bottom composer, shown after first query -->
+  <main class="canvas" id="canvas">
+    <div class="canvas-inner" id="canvas-inner"></div>
+  </main>
+
+  <footer class="composer" id="composer">
+    <div class="composer-inner">
+      <input
+        id="query-chat"
+        class="search-input"
+        placeholder="Ask another question…"
+        autocomplete="off"
+      >
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
