@@ -67,7 +67,40 @@ class Api:
     def wait_for_warm_up(self) -> None:
         self._warm_up_complete.wait()
 
-    def search_only(self, query: str) -> list[dict]:
+    def _rewrite_search_query(self, query: str) -> str:
+        """Resolve conversational shorthand before embedding the query."""
+        history = list(self.chat_history)[-6:]
+        if history:
+            conversation = "\n".join(
+                f"{entry['role']}: {entry['content'][-800:]}"
+                for entry in history
+            )
+        else:
+            conversation = "(No previous conversation.)"
+
+        prompt = f"""Conversation:
+{conversation}
+
+User request: {query}
+
+Standalone retrieval query:"""
+
+        try:
+            rewritten = self._ensure_llm().rewrite_query(prompt)
+        except Exception:
+            return query
+
+        rewritten = " ".join(rewritten.strip().strip('"').split())
+        if not rewritten or len(rewritten) > 240:
+            return query
+        return rewritten
+
+    def rewrite_query(self, query: str) -> str:
+        """Public pywebview endpoint for the visible rewrite stage."""
+        return self._rewrite_search_query(query)
+
+    def search_rewritten(self, query: str) -> list[dict]:
+        """Search an already-normalized retrieval query."""
         from cortex.retrieval.search import search
         from cortex.ingestion.clip import make_thumbnail_base64
 
@@ -79,6 +112,10 @@ class Api:
                 except Exception:
                     r["thumbnail"] = None
         return results
+
+    def search_only(self, query: str) -> list[dict]:
+        """Compatibility endpoint for callers that do not render stages."""
+        return self.search_rewritten(self._rewrite_search_query(query))
 
     @staticmethod
     def _has_only_images(results: list[dict]) -> bool:

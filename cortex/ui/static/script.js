@@ -69,6 +69,23 @@ function startThinkingCycle(el) {
   return () => clearInterval(interval); // returns a stop function
 }
 
+function renderRetrievalTrace(originalQuery, rewrittenQuery = null) {
+  const original = escapeHtml(originalQuery);
+  if (rewrittenQuery === null) {
+    return `
+      <div class="retrieval-step"><span>query received</span><code>${original}</code></div>
+      <div class="retrieval-step retrieval-pending"><span>rewriting…</span></div>
+    `;
+  }
+
+  const rewritten = escapeHtml(rewrittenQuery);
+  const changed = rewrittenQuery.trim() !== originalQuery.trim();
+  return `
+    <div class="retrieval-step"><span>received</span><code>${original}</code></div>
+    <div class="retrieval-step"><span>${changed ? "understood" : "searching"}</span><code>${rewritten}</code></div>
+  `;
+}
+
 function timeGreeting() {
   const h = new Date().getHours();
   if (h < 5) return "Up late";
@@ -216,6 +233,7 @@ async function runQuery(query) {
     <div class="turn-query-row">
       <div class="turn-query">${escapeHtml(query)}</div>
     </div>
+    <div class="turn-retrieval">${renderRetrievalTrace(query)}</div>
     <div class="turn-found" id="found-${Date.now()}" style="display:none;">
       <div class="found-label">Found</div>
       <div class="found-strip"></div>
@@ -231,13 +249,19 @@ async function runQuery(query) {
   scrollToBottom();
 
   const answerEl = turn.querySelector(".answer-text");
+  const retrievalEl = turn.querySelector(".turn-retrieval");
   const foundEl = turn.querySelector(".turn-found");
   const foundStripEl = turn.querySelector(".found-strip");
 
   let results = [];
   try {
-    // phase 1 — sources appear immediately
-    results = await window.pywebview.api.search_only(query);
+    setStatus("rewriting query…", "thinking");
+    const rewrittenQuery = await window.pywebview.api.rewrite_query(query);
+    retrievalEl.innerHTML = renderRetrievalTrace(query, rewrittenQuery);
+    scrollToBottom();
+
+    setStatus("searching files…", "thinking");
+    results = await window.pywebview.api.search_rewritten(rewrittenQuery);
 
     if (results && results.length > 0) {
       foundStripEl.innerHTML = renderFoundStrip(results);

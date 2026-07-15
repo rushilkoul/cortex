@@ -1,12 +1,13 @@
 title = "Cortex Config"
 
 [models]
-llm_repo = "Qwen/Qwen2.5-1.5B-Instruct-GGUF"
-llm_filename = "qwen2.5-1.5b-instruct-q4_k_m.gguf"
+llm_repo = "Qwen/Qwen2.5-3B-Instruct-GGUF"
+llm_filename = "qwen2.5-3b-instruct-q4_k_m.gguf"
 
 [tracker]
 directories = [
-    "/home/kavoya/projects/velvet",
+    "/home/rushil/Pictures/Screenshots",
+    "/home/rushil/Desktop/Projects/velvet"
 ]
 
 [logger]

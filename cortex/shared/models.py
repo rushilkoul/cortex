@@ -180,6 +180,26 @@ class LocalLLM:
         )
         return response["choices"][0]["message"]["content"]
 
+    def rewrite_query(self, prompt: str) -> str:
+        """Run a short, deterministic pass before vector retrieval."""
+        response = self.model.create_chat_completion(
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Rewrite the user's request as one concise, standalone "
+                        "semantic-search query. Resolve references using the "
+                        "conversation. Preserve project names, API names, and "
+                        "technical terms. Return only the query—no explanation."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.0,
+            max_tokens=48,
+        )
+        return response["choices"][0]["message"]["content"]
+
 
 def warm_up_models(
     include_llm: bool = True, llm_factory=None
