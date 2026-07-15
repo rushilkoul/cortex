@@ -203,7 +203,7 @@ compiling `llama-cpp-python` for CUDA. you should see immense performance improv
       <sub><b>Search results with source citations</b></sub>
     </td>
     <td width="50%" align="center">
-      <img src="screenshots/settings-menu.png" alt="Image search using CLIP embeddings" width="100%"><br>
+      <img src="screenshots/settings-menu.png" alt="Settings Menu" width="100%"><br>
       <sub><b></b></sub>
     </td>
   </tr>
