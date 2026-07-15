@@ -187,15 +187,16 @@ compiling `llama-cpp-python` for CUDA. you should see immense performance improv
 ## Demo and Screenshots
 ### Video demo
 Video demo can be found at https://drive.google.com/drive/folders/1tF-myXwrX3N-YdjYoxh6IXmD_mLpnrZ4?usp=sharing
+(SORRY FOR UPLOADING 2 MINS LATE PLZ FORGIVE)
 <table>
   <tr>
     <td width="50%" align="center">
       <img src="screenshots/welcome-page-light.png" alt="Welcome Page - Light mode" width="100%"><br>
-      <sub><b>GUI — light mode</b></sub>
+      <sub><b>Welcome Page - Light mode</b></sub>
     </td>
     <td width="50%" align="center">
       <img src="screenshots/welcome-page-dark.png" alt="Welcome Page - Dark mode" width="100%"><br>
-      <sub><b>GUI — dark mode</b></sub>
+      <sub><b>Welcome Page - Dark mode</b></sub>
     </td>
   </tr>
   <tr>
@@ -208,7 +209,16 @@ Video demo can be found at https://drive.google.com/drive/folders/1tF-myXwrX3N-Y
       <sub><b>Settings Menu</b></sub>
     </td>
   </tr>
-
+  <tr>
+    <td width="50%" align="center">
+      <img src="screenshots/image-query.png" alt="Semantic search results with source citations" width="100%"><br>
+      <sub><b>Image search via CLIP embeddings</b></sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="screenshots/cortex-cli.png" alt="Settings Menu" width="100%"><br>
+      <sub><b>Cortex CLI</b></sub>
+    </td>
+  </tr>
 </table>
 
 <br>
