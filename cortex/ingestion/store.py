@@ -1,9 +1,11 @@
 from pathlib import Path 
-from markitdown import MarkItDown
+
 import hashlib
 import os
 import threading
 import tomllib 
+import mammoth
+import pymupdf4llm
 
 from cortex.shared.models import get_embedder, get_client
 from cortex.shared.logger import logger
@@ -14,8 +16,6 @@ TEXT_EXTENSIONS = {".md", ".markdown", ".txt", ".docx", ".pdf"}
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 _INDEX_LOCK = threading.RLock()
-
-# md = MarkItDown() kill this line
 
 def file_metadata(path: str) -> dict:
     stat = os.stat(path)
@@ -56,9 +56,14 @@ def try_index(file_path: str) -> None:
             if suffix == ".md" or suffix == ".markdown" or suffix == ".txt":
                 text = path.read_text(encoding="utf-8")
                 #text = md.convert(path).text_content
-            else:
+            elif suffix == ".docx":
                 # converting a doc to markdown
-                # text = md.convert(path).text_content
+                with open(path, "rb") as f:
+                    result = mammoth.convert_to_markdown(f)
+                    text = result.value
+            elif suffix == ".pdf":
+                text = pymupdf4llm.to_markdown(path)
+            else:
                 pass
         except (UnicodeDecodeError, PermissionError, FileNotFoundError) as e:
             logger.log(f"[SKIPPED UNREADABLE] {file_path}: {e}")
