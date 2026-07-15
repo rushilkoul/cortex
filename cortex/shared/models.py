@@ -104,7 +104,7 @@ def get_clip():
 
 import tomllib
 from huggingface_hub import hf_hub_download
-from llama_cpp import Llama
+from llama_cpp import Llama, llama_print_system_info, llama_supports_gpu_offload
 from halo import Halo
 
 class LocalLLM:
@@ -120,14 +120,45 @@ class LocalLLM:
         # ^ resolves from local cache without listing the repo, if already downloaded.
         # why doesnt it work normally like it does with the others? I dont know.
 
+        # `n_gpu_layers=-1` is only meaningful when the installed llama.cpp
+        # binary was compiled with a GPU backend.  It otherwise quietly runs on
+        # CPU, so report the backend before loading anything.
+        system_info = llama_print_system_info().decode("utf-8", errors="replace")
+        gpu_offload_supported = bool(llama_supports_gpu_offload())
         try:
-            with Halo(text="\033[2mloading model (GPU)\033[0m", spinner="dots"):
+            import torch
+            torch_cuda_available = torch.cuda.is_available()
+        except Exception:
+            torch_cuda_available = False
+
+        backend = "GPU" if gpu_offload_supported else "CPU"
+        diagnostic = (
+            "[LLM DEBUG] "
+            f"llama.cpp backend={backend}; "
+            f"gpu_offload_supported={gpu_offload_supported}; "
+            f"torch_cuda_available={torch_cuda_available}; "
+            f"system_info={system_info}"
+        )
+        print(diagnostic)
+        logger.log(diagnostic)
+
+        requested_gpu_layers = -1 if gpu_offload_supported else 0
+
+        try:
+            with Halo(text=f"\033[2mloading model ({backend})\033[0m", spinner="dots"):
                 self.model = Llama(
                     model_path=model_path,
                     n_ctx=4096,
-                    n_gpu_layers=-1,
+                    n_gpu_layers=requested_gpu_layers,
                     verbose=False,
                 )
+            load_diagnostic = (
+                "[LLM DEBUG] "
+                f"loaded backend={backend}; "
+                f"requested_gpu_layers={requested_gpu_layers}"
+            )
+            print(load_diagnostic)
+            logger.log(load_diagnostic)
             print("Ready!")
 
         except Exception as e:

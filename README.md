@@ -62,7 +62,26 @@ cortex ui               # launch the super cool GUI
 ```
  
 Inside the shell, type a natural-language question and Cortex will search your indexed files and generate an answer using the local LLM.
- 
+
+
+### Running the model on CUDA
+By complete default, the program may be running on your CPU.
+check logs.txt, which whether the CPU or GPU is being used. 
+If you have an NVIDIA GPU:
+
+ensure CUDA toolkit and `nvcc` are installed and added to path.
+
+run:
+```
+CMAKE_ARGS="-DGGML_CUDA=on" \
+uv pip install \
+  --python .venv/bin/python \
+  --reinstall-package llama-cpp-python \
+  --no-cache \
+  llama-cpp-python
+```
+
+compiling `llama-cpp-python` for CUDA. you should see immense performance improvements with the LLM.
 
 ## Demo and Screenshots
  
