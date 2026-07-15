@@ -2,8 +2,6 @@
 
 A local-first semantic search and Q&A assistant for your own files. Cortex watches folders you choose, indexes your notes and images, and turns them into something you can actually search by meaning: all powered by models that run entirely on your machine.
 
-<br>
-
 ## Contents
 - [Problem](#problem)
 - [Solution](#solution)
@@ -18,18 +16,15 @@ A local-first semantic search and Q&A assistant for your own files. Cortex watch
 - [Attribution](#attribution)
 - [License](#license)
 - [Known Limitations and Roadmap](#known-limitations-and-roadmap)
-<br>
-
 
 ## Problem
 Most of what we "know" is scattered across markdown notes, screenshots, and images on our own computers, and it's nearly impossible to search by meaning instead of exact keywords. Existing AI note-taking tools solve this by sending your files to the cloud, which means giving up privacy just to get decent search.
 
-<br>
 
 ## Solution
 Cortex runs a full retrieval-augmented generation (RAG) pipeline locally. It watches tracked directories for your files, embeds their content into a local vector database as they're created or edited, and lets you query that knowledge base in natural language from a simple CLI. Relevant excerpts are retrieved and handed to a local LLM, which answers using only what it found on your system - nothing leaves your machine, and nothing is made up.
 
-<br>
+
 
 ## On-Device AI Usage
 Everything in Cortex's pipeline runs locally, with no calls to external APIs:
@@ -41,10 +36,9 @@ Everything in Cortex's pipeline runs locally, with no calls to external APIs:
 - **Relevance filtering** — retrieved results are filtered against a calibrated cosine-distance threshold before ever reaching the LLM, so an unrelated query correctly returns "nothing relevant found" instead of forcing irrelevant sources into the answer. Text (`similarity_threshold = 0.7`) and images (`image_similarity_threshold = 0.75`) use separate thresholds — CLIP's image-text similarity runs lower than text-text similarity even for correct matches (the "modality gap"), so a looser cutoff is needed for images. Both were calibrated empirically against labeled relevant/irrelevant test queries; see `calibrate.py` for the methodology.
 The LLM, filename, and repo can be swapped by editing `config.toml`.
  
-<br>
 
 ## Local AI Verification
- 
+
 **Runs fully on-device:**
 - Text embedding (MiniLM), image embedding (CLIP), vector search (local ChromaDB instance on `localhost`), and answer generation (local GGUF LLM via `llama-cpp-python`). None of these make network calls once set up.
 **Requires internet:**
@@ -52,7 +46,6 @@ The LLM, filename, and repo can be swapped by editing `config.toml`.
 **User data leaving the device:**
 - None. File contents, embeddings, and query text are never transmitted anywhere. No external API calls happen during indexing, search, or answer generation.
 
-<br>
 
 ## Technical Report
  
@@ -82,6 +75,7 @@ The LLM, filename, and repo can be swapped by editing `config.toml`.
 
 <br>
 
+**Note**:
 > Benchmarked with `benchmark_query.py`, run once each on Device 1 (discrete NVIDIA GPU, 3B model) and Device 3 (integrated GPU only, 1.5B model). Generation is roughly 6x slower on Device 3 with no discrete GPU to offload to, despite running the smaller model — CPU/integrated-GPU inference is clearly the bottleneck. Device 3's GPU memory reads "unavailable" because it has no NVIDIA hardware, not because of a measurement error. Device 2 hasn't been benchmarked yet. Client, embedder, CLIP, and LLM load concurrently on a thread pool at startup, so the per-model "finished in Xs" lines in the raw warm-up log are completion timestamps from a shared start, not isolated per-model durations.
 
  
@@ -89,7 +83,7 @@ The LLM, filename, and repo can be swapped by editing `config.toml`.
 
 > The 4.14s figure above is total time-to-ready from a single logged run on one team member's CUDA-enabled machine — it's a startup cost, not per-query response time. Client, embedder, CLIP, and LLM load concurrently on a thread pool, so the per-model "finished in Xs" lines in the raw log are completion timestamps from a shared start, not isolated per-model durations. Model size, per-query latency, memory usage, and the actual tested hardware spec still need to be captured and documented.
  
-<br>
+
 
 ## Evaluation
  
@@ -103,7 +97,7 @@ The LLM, filename, and repo can be swapped by editing `config.toml`.
 - Queries that land near the threshold boundary can be misclassified in either direction (a specific but under-represented topic scoring similarly to a genuinely unrelated query).
 - Vaults with highly repetitive or near-duplicate chunk content can crowd out a genuinely relevant result within the fixed top-`k` retrieval pool before filtering is even applied.
 
-<br>
+
 
 ## Privacy and Safety
  
@@ -118,7 +112,6 @@ The LLM, filename, and repo can be swapped by editing `config.toml`.
 - There is currently no per-user access control on the local database.
 - Tracking a directory containing sensitive files means that content is embedded and stored locally (never transmitted), but remains as accessible as the original files to anyone with access to the machine.
 
-<br>
 
 ## Tech Stack
  
@@ -133,7 +126,6 @@ The LLM, filename, and repo can be swapped by editing `config.toml`.
 | LLM inference | `llama-cpp-python` (GGUF, Qwen2.5-1.5B-Instruct by default) |
 | Config | TOML (`tomlkit`) |
  
-<br>
 
 ## Setup and Usage
 ```bash
@@ -182,12 +174,12 @@ uv pip install \
 
 compiling `llama-cpp-python` for CUDA. you should see immense performance improvements with the LLM.
 
-<br>
 
 ## Demo and Screenshots
 ### Video demo
 Video demo can be found at https://drive.google.com/drive/folders/1tF-myXwrX3N-YdjYoxh6IXmD_mLpnrZ4?usp=sharing
-(SORRY FOR UPLOADING 2 MINS LATE PLZ FORGIVE)
+
+### Screenshots
 <table>
   <tr>
     <td width="50%" align="center">
@@ -221,7 +213,6 @@ Video demo can be found at https://drive.google.com/drive/folders/1tF-myXwrX3N-Y
   </tr>
 </table>
 
-<br>
 
 ## Attribution
  
@@ -237,13 +228,11 @@ Video demo can be found at https://drive.google.com/drive/folders/1tF-myXwrX3N-Y
  
 **Pre-existing work:** none beyond the open-source libraries and pretrained models listed above.
  
-<br>
 
 ## License
  
 [GNU General Public License v3.0 (GPLv3)](LICENSE)
 
-<br>
 
 ## Known Limitations and Roadmap
 ### Completed
