@@ -185,7 +185,8 @@ compiling `llama-cpp-python` for CUDA. you should see immense performance improv
 <br>
 
 ## Demo and Screenshots
-
+### Video demo
+Video demo can be found at https://drive.google.com/drive/folders/1tF-myXwrX3N-YdjYoxh6IXmD_mLpnrZ4?usp=sharing
 <table>
   <tr>
     <td width="50%" align="center">
