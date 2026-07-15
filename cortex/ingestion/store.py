@@ -75,6 +75,7 @@ def try_index(file_path: str) -> None:
         try:
             if needs_indexing(file_path):
                 chunks = chunk_text(text)
+                logger.log(f"[LOG] Chunked {file_path}")
                 if chunks:
                     store_chunks(file_path, chunks)
             else:
