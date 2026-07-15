@@ -74,8 +74,8 @@ cortex info              # show tracked directories
 cortex track <dir>       # start tracking a directory
 cortex untrack <dir>     # stop tracking a directory
  
-cortex                  # launch the interactive shell
-cortex ui               # launch the super cool GUI
+cortex shell             # launch the interactive shell
+cortex                   # launch the super cool GUI
 ```
  
 Inside the shell, type a natural-language question and Cortex will search your indexed files and generate an answer using the local LLM.
