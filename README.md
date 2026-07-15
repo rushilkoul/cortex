@@ -67,7 +67,6 @@ The LLM, filename, and repo can be swapped by editing `config.toml`.
 | Per-query latency (warm queries, CPU/integrated-GPU, Device 3) | Retrieval: mean 0.16s, median 0.13s · Generation: mean 5.42s, median 4.51s · End-to-end: mean 5.58s, median 4.64s |
 | Peak memory usage (Device 1, discrete GPU) | Process RSS: 2311.9 MiB · GPU memory (this process): 3166.0 MiB |
 | Peak memory usage (Device 3, integrated GPU) | Process RSS: 3446.0 MiB · GPU memory: unavailable (no NVIDIA GPU — `nvidia-smi` not present) |
-
 | Tested device specifications | SEE BELOW |
 
 **Devices tested on:**
