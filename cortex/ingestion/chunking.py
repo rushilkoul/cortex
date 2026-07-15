@@ -1,5 +1,5 @@
 import re
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 from cortex.shared.models import get_embedder
 
 # takes text as input and returns list of tokens

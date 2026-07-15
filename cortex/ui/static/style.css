@@ -54,6 +54,7 @@ html,
 body {
     margin: 0;
     height: 100%;
+    /* background: red; */
     background: var(--bg);
     color: var(--text);
     font-family: var(--font-sans);
@@ -430,6 +431,98 @@ body {
     --webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+
+.turn-found {
+  margin-bottom: 18px;
+}
+ 
+.found-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+ 
+.found-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+ 
+.found-card {
+  flex-shrink: 0;
+  width: 150px;
+  height: 150px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+  position: relative;
+}
+ 
+.found-card:hover {
+  border-color: var(--accent-dim);
+  transform: translateY(-1px);
+}
+ 
+.found-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+ 
+.found-card.text-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  text-align: center;
+  gap: 8px;
+}
+ 
+.found-card.text-card .file-glyph {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  color: var(--text-dim);
+}
+ 
+.found-card.text-card .file-name {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text);
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  --webkit-line-clamp: 3;
+  --webkit-box-orient: vertical;
+  word-break: break-word;
+}
+ 
+.found-card-path-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+  padding: 16px 8px 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+ 
+
 
 .composer {
     flex-shrink: 0;

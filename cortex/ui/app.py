@@ -45,6 +45,34 @@ class Api:
 
         threading.Thread(target=_load, daemon=True).start()
 
+    def search_only(self, query: str) -> list[dict]:
+        from cortex.retrieval.search import search
+        from cortex.ingestion.clip import make_thumbnail_base64
+
+        results = search(query, k=5)
+        for r in results:
+            if r["type"] == "image":
+                try:
+                    r["thumbnail"] = make_thumbnail_base64(r["file_path"])
+                except Exception:
+                    r["thumbnail"] = None
+        return results
+
+    def generate_answer(self, query: str, results: list[dict]) -> str:
+        from cortex.reasoning.prompt import build_prompt
+
+        self._ensure_llm()
+        history_list = list(self.chat_history)
+        prompt = build_prompt(query, results, history_list)
+
+        answer = self.llm.generate(prompt)
+
+        self.chat_history.append({"role": "User", "content": query})
+        self.chat_history.append({"role": "Cortex", "content": answer})
+
+        return {"answer": answer, "results": results}
+
+    # backwards compatibility for CLI mode
     def ask(self, query: str) -> dict:
         from cortex.retrieval.search import search
         from cortex.reasoning.prompt import build_prompt

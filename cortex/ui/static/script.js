@@ -136,28 +136,43 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function renderResultsHtml(results) {
+function fileGlyph(ext) {
+  const map = { ".md": "◆", ".markdown": "◆", ".pdf": "▤", ".py": "◇", ".txt": "▢" };
+  return map[ext] || "◆";
+}
+
+function renderFoundStrip(results) {
   if (!results || results.length === 0) return "";
+
   return results.map(r => {
     const isImage = r.type === "image";
-    const thumb = isImage
-    ? `<div class="result-thumb" data-path="${escapeHtmlAttr(r.file_path)}">
-        ${r.thumbnail ? `<img src="${r.thumbnail}">` : ""}
-      </div>`
-    : `<div class="result-thumb text-icon">◆</div>`;
-    const snippet = isImage
-      ? ""
-      : `<div class="result-snippet">${escapeHtml((r.content || "").slice(0, 140))}</div>`;
-    return `
-      <div class="result">
-        ${thumb}
-        <div class="result-body">
-          <div class="result-path">${escapeHtml(r.file_path)}</div>
-          ${snippet}
+    const fileName = r.file_path.split(/[\\/]/).pop();
+
+    if (isImage) {
+      return `
+        <div class="found-card" data-path="${escapeHtmlAttr(r.file_path)}">
+          ${r.thumbnail ? `<img src="${r.thumbnail}">` : ""}
+          <div class="found-card-path-overlay">${escapeHtml(fileName)}</div>
         </div>
+      `;
+    }
+
+    const ext = "." + (fileName.split(".").pop() || "");
+    return `
+      <div class="found-card text-card" data-path="${escapeHtmlAttr(r.file_path)}">
+        <div class="file-glyph">${fileGlyph(ext)}</div>
+        <div class="file-name">${escapeHtml(fileName)}</div>
       </div>
     `;
   }).join("");
+}
+
+function wireFoundCardClicks(container) {
+  container.querySelectorAll(".found-card[data-path]").forEach(el => {
+    el.parentElement.addEventListener("click", () => {
+      window.pywebview.api.open_file(el.dataset.path);
+    });
+  });
 }
 
 function enterChatMode() {
@@ -180,7 +195,7 @@ async function runQuery(query) {
   queryLanding.value = "";
   queryChat.value = "";
 
-  setStatus("thinking…", "thinking");
+  setStatus("searching…", "thinking");
 
   const turn = document.createElement("div");
   turn.className = "turn";
@@ -188,14 +203,14 @@ async function runQuery(query) {
     <div class="turn-query-row">
       <div class="turn-query">${escapeHtml(query)}</div>
     </div>
+    <div class="turn-found" id="found-${Date.now()}" style="display:none;">
+      <div class="found-label">Found</div>
+      <div class="found-strip"></div>
+    </div>
     <div class="turn-answer-row">
       <div class="turn-answer">
+        <div class="answer-label"></div>
         <div class="answer-text typing"></div>
-        <button class="results-toggle" style="display:none;">
-          <span class="chevron">▸</span>
-          <span class="toggle-label"></span>
-        </button>
-        <div class="turn-results"></div>
       </div>
     </div>
   `;
@@ -203,38 +218,32 @@ async function runQuery(query) {
   scrollToBottom();
 
   const answerEl = turn.querySelector(".answer-text");
-  const resultsEl = turn.querySelector(".turn-results");
-  const toggleEl = turn.querySelector(".results-toggle");
-  const stopThinking = startThinkingCycle(answerEl);
+  const foundEl = turn.querySelector(".turn-found");
+  const foundStripEl = turn.querySelector(".found-strip");
 
-  toggleEl.addEventListener("click", () => {
-    const expanded = resultsEl.classList.toggle("expanded");
-    toggleEl.classList.toggle("expanded", expanded);
-  });
-
+  let results = [];
   try {
-    const { answer, results } = await window.pywebview.api.ask(query);
+    // phase 1 — sources appear immediately
+    results = await window.pywebview.api.search_only(query);
+
+    if (results && results.length > 0) {
+      foundStripEl.innerHTML = renderFoundStrip(results);
+      wireFoundCardClicks(foundStripEl);
+      foundEl.style.display = "block";
+      scrollToBottom();
+    }
+
+    setStatus("thinking…", "thinking");
+    const stopThinking = startThinkingCycle(answerEl);
+
+    // phase 2 — answer follows
+    const answer = await window.pywebview.api.generate_answer(query, results);
     stopThinking();
     answerEl.classList.remove("typing");
-    answerEl.innerHTML = marked.parse(answer);
-    resultsEl.innerHTML = renderResultsHtml(results);
-
-    
-    if (results && results.length > 0) {
-      toggleEl.style.display = "inline-flex";
-      toggleEl.querySelector(".toggle-label").textContent =
-      `${results.length} source${results.length > 1 ? "s" : ""}`;
-      
-      document.querySelectorAll(".result").forEach(el => {
-        el.addEventListener("click", () => {
-          window.pywebview.api.open_file(el.dataset.path);
-        });
-      });
-    }
+    answerEl.innerHTML = marked.parse(answer.answer);
 
     setStatus("ready", "ready");
   } catch (err) {
-    stopThinking();
     answerEl.classList.remove("typing");
     answerEl.textContent = "Something went wrong reaching Cortex.";
     setStatus("error", null);
