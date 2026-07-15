@@ -55,8 +55,10 @@ const THINKING_WORDS = [
   "Searching",
   "Recalling",
   "Assimilating",
+  "Thinking",
+  "Writing",
   "Connecting the dots",
-  "Digging through files",
+  // "Digging through files",
 ];
 
 function startThinkingCycle(el) {
