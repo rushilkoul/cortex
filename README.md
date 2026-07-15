@@ -57,8 +57,10 @@ The LLM, filename, and repo can be swapped by editing `config.toml`.
 | Warm-up latency (one test run, GPU backend) | Total time-to-ready: **4.14s** (see note below) |
 | Model size (on disk, GGUF `q4_k_m`) | `all-MiniLM-L6-v2`: ~91 MB · OpenCLIP `ViT-B-32` (`laion2b_s34b_b79k`): ~605 MB · `Qwen2.5-1.5B-Instruct`: ~1.12 GB · `Qwen2.5-3B-Instruct`: ~2.1 GB |
 | Per-query latency (warm queries, GPU backend, Device 1) | Retrieval: mean 0.09s, median 0.03s · Generation: mean 0.85s, median 0.87s · End-to-end: mean 0.94s, median 0.90s |
+| Per-query latency (warm queries, CPU/integrated-GPU, Device 2) | Retrieval: mean 0.13s, median 0.08s · Generation: mean 5.68s, median 3.11s · End-to-end: mean 5.81s, median 3.19s |
 | Per-query latency (warm queries, CPU/integrated-GPU, Device 3) | Retrieval: mean 0.16s, median 0.13s · Generation: mean 5.42s, median 4.51s · End-to-end: mean 5.58s, median 4.64s |
 | Peak memory usage (Device 1, discrete GPU) | Process RSS: 2311.9 MiB · GPU memory (this process): 3166.0 MiB |
+| Peak memory usage (Device 2, integrated GPU) | Process RSS: 3074.8 MiB · GPU memory: unavailable (no NVIDIA GPU — `nvidia-smi` not present) |
 | Peak memory usage (Device 3, integrated GPU) | Process RSS: 3446.0 MiB · GPU memory: unavailable (no NVIDIA GPU — `nvidia-smi` not present) |
 | Tested device specifications | SEE BELOW |
 
