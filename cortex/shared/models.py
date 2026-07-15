@@ -3,6 +3,8 @@ import os
 import threading
 os.environ["HF_HUB_OFFLINE"] = "1"
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import chromadb
 import subprocess
 import time
@@ -10,7 +12,9 @@ import time
 from cortex.shared.logger import logger
 
 _server_process = None
-_init_lock = threading.RLock()
+_embedder_lock = threading.RLock()
+_client_lock = threading.RLock()
+_clip_lock = threading.RLock()
 
 def start_server():
     global _server_process
@@ -42,7 +46,7 @@ def get_embedder():
     from sentence_transformers import SentenceTransformer
     global _embedder
     if _embedder is None:
-        with _init_lock:
+        with _embedder_lock:
             if _embedder is None:
                 _embedder = SentenceTransformer("all-MiniLM-L6-v2")
     return _embedder
@@ -50,7 +54,7 @@ def get_embedder():
 def get_client():
     global _client
     if _client is None:
-        with _init_lock:
+        with _client_lock:
             if _client is None:
                 i = 0; 
                 while i < 50:
@@ -79,7 +83,7 @@ def get_clip():
 
     global _model, _preprocess, _tokenizer, _device
     if _model is None:
-        with _init_lock:
+        with _clip_lock:
             if _model is None:
                 # prefer NVIDIA GPU if available, else fallback to CPU
                 _device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -143,3 +147,39 @@ class LocalLLM:
             messages=[{"role": "user", "content": prompt}]
         )
         return response["choices"][0]["message"]["content"]
+
+
+def warm_up_models(
+    include_llm: bool = True, llm_factory=None
+) -> dict[str, object | None]:
+    """
+    load independent runtime resources concurrently
+    """
+    tasks = {
+        "client": get_client,
+        "embedder": get_embedder,
+        "clip": get_clip,
+    }
+
+    if include_llm:
+        tasks["llm"] = llm_factory or LocalLLM
+
+    results: dict[str, object | None] = {}
+    started_at = time.perf_counter()
+
+    with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+        future_to_name = {executor.submit(fn): name for name, fn in tasks.items()}
+
+        for future in as_completed(future_to_name):
+            name = future_to_name[future]
+            try:
+                results[name] = future.result()
+                logger.log(
+                    f"[LOG] Warm-up {name} finished in "
+                    f"{time.perf_counter() - started_at:.2f}s."
+                )
+            except Exception as exc:
+                logger.log(f"[ERROR] warm_up {name} failed: {exc}")
+                results[name] = None
+
+    return results

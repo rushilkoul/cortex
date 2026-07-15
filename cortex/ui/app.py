@@ -7,17 +7,28 @@ from collections import deque
 import tomllib
 import tomlkit
 import os
+import re
 import subprocess
 from sys import platform
-from cortex.ingestion.clip import make_thumbnail_base64
 
 CONFIG_PATH = "config.toml"
 UI_DIR = Path(__file__).parent / "static"
 
 class Api:
+    _IMAGE_ONLY_ANSWER = "I found these images."
+    _EXPLANATORY_QUERY = re.compile(
+        r"^(?:what|who|when|where|why|how|which|explain|define|describe|"
+        r"compare|summari[sz]e|tell me|can you|could you|would you|"
+        r"is |are |do |does |did |will |would |should )\b",
+        re.IGNORECASE,
+    )
+
     def __init__(self):
         self.llm = None
         self._loading = False
+        self._warm_up_lock = threading.Lock()
+        self._warm_up_complete = threading.Event()
+        self._llm_lock = threading.RLock()
        
         self.chat_history = deque(maxlen=20)
 
@@ -26,24 +37,35 @@ class Api:
 
     def _ensure_llm(self):
         if self.llm is None:
-            from cortex.shared.models import LocalLLM
-            self.llm = LocalLLM()
+            with self._llm_lock:
+                if self.llm is None:
+                    from cortex.shared.models import LocalLLM
+                    self.llm = LocalLLM()
+        return self.llm
 
     def warm_up(self):
-        """called once when the window opens, loads all models in the background."""
-        if self._loading:
-            return
-        self._loading = True
+        """Load models once without blocking pywebview's UI thread."""
+        with self._warm_up_lock:
+            if self._loading:
+                return
+            self._loading = True
+            self._warm_up_complete.clear()
 
         def _load():
-            from cortex.shared.models import get_embedder, get_clip, get_client
-            get_client()
-            get_embedder()
-            get_clip()
-            self._ensure_llm()
-            self._loading = False
+            from cortex.shared.models import warm_up_models
+
+            try:
+                models = warm_up_models(llm_factory=self._ensure_llm)
+                self.llm = models.get("llm")
+            finally:
+                with self._warm_up_lock:
+                    self._loading = False
+                    self._warm_up_complete.set()
 
         threading.Thread(target=_load, daemon=True).start()
+
+    def wait_for_warm_up(self) -> None:
+        self._warm_up_complete.wait()
 
     def search_only(self, query: str) -> list[dict]:
         from cortex.retrieval.search import search
@@ -58,7 +80,28 @@ class Api:
                     r["thumbnail"] = None
         return results
 
+    @staticmethod
+    def _has_only_images(results: list[dict]) -> bool:
+        return bool(results) and all(result.get("type") == "image" for result in results)
+
+    @classmethod
+    def _should_skip_llm_for_images(cls, query: str, results: list[dict]) -> bool:
+        """Only short-circuit a visual lookup, never a question to answer."""
+        return (
+            cls._has_only_images(results)
+            and not cls._EXPLANATORY_QUERY.match(query.strip())
+        )
+
+    def _record_exchange(self, query: str, answer: str) -> None:
+        self.chat_history.append({"role": "User", "content": query})
+        self.chat_history.append({"role": "Cortex", "content": answer})
+
     def generate_answer(self, query: str, results: list[dict]) -> str:
+        if self._should_skip_llm_for_images(query, results):
+            answer = self._IMAGE_ONLY_ANSWER
+            self._record_exchange(query, answer)
+            return {"answer": answer, "results": results}
+
         from cortex.reasoning.prompt import build_prompt
 
         self._ensure_llm()
@@ -67,8 +110,7 @@ class Api:
 
         answer = self.llm.generate(prompt)
 
-        self.chat_history.append({"role": "User", "content": query})
-        self.chat_history.append({"role": "Cortex", "content": answer})
+        self._record_exchange(query, answer)
 
         return {"answer": answer, "results": results}
 
@@ -77,26 +119,25 @@ class Api:
         from cortex.retrieval.search import search
         from cortex.reasoning.prompt import build_prompt
 
-        self._ensure_llm()
         results = search(query, k=5)
-        
-        
-        history_list = list(self.chat_history)
-        prompt = build_prompt(query, results, history_list)
-        
-        answer = self.llm.generate(prompt)
-        
-        
-        self.chat_history.append({"role": "User", "content": query})
-        self.chat_history.append({"role": "Cortex", "content": answer})
+        if self._should_skip_llm_for_images(query, results):
+            answer = self._IMAGE_ONLY_ANSWER
+            self._record_exchange(query, answer)
+        else:
+            self._ensure_llm()
+            history_list = list(self.chat_history)
+            prompt = build_prompt(query, results, history_list)
+            answer = self.llm.generate(prompt)
+            self._record_exchange(query, answer)
 
+        from cortex.ingestion.clip import make_thumbnail_base64
         for r in results:
             if r["type"] == "image":
                 try:
                     r["thumbnail"] = make_thumbnail_base64(r["file_path"])
                 except Exception:
                     r["thumbnail"] = None
-        
+
         return {"answer": answer, "results": results}
     
     def list_directories(self) -> list[str]:
@@ -157,18 +198,43 @@ class Api:
         return {"ok": True}
 
 def start_ui():
-    from cortex.shared.models import start_server, stop_server
-    from cortex.ingestion.watcher import start_watcher
-
-    start_server()
-    observer = start_watcher()
-
     api = Api()
     window = webview.create_window("Cortex", str(UI_DIR / "index.html"), js_api=api, width=900, height=700)
-    api.window = window 
+    api.window = window
+
+    observer = None
+    observer_lock = threading.Lock()
+
+    def _start_watcher_after_warm_up() -> None:
+        nonlocal observer
+        # Bulk indexing invokes the same embedding models. Let the dedicated
+        # warm-up load weights first instead of competing for disk, CPU, and
+        # GPU initialization during application startup.
+        api.wait_for_warm_up()
+        from cortex.ingestion.watcher import start_watcher
+
+        started_observer = start_watcher()
+        with observer_lock:
+            observer = started_observer
+
+    def _start_services() -> None:
+        # pywebview invokes this function in a worker thread before it creates
+        # the native window, so wait for the actual display event first.
+        window.events.shown.wait()
+        from cortex.shared.models import start_server
+
+        start_server()
+        api.warm_up()
+        threading.Thread(target=_start_watcher_after_warm_up, daemon=True).start()
+
     try:
-        webview.start(gui="qt", private_mode=False)
+        webview.start(_start_services, gui="qt", private_mode=False)
     finally:
-        observer.stop()
-        observer.join()
+        with observer_lock:
+            active_observer = observer
+        if active_observer is not None:
+            active_observer.stop()
+            active_observer.join()
+
+        from cortex.shared.models import stop_server
         stop_server()

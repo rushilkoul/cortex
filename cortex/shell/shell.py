@@ -12,10 +12,10 @@ def start_shell():
     console = Console()
 
     with Halo(text="\033[2mloading models...\033[0m", spinner="dots"):
-        from cortex.shared.models import start_server, stop_server, get_clip, get_embedder, LocalLLM
-        get_embedder()
-        get_clip()
-        llm = LocalLLM()
+        from cortex.shared.models import start_server, stop_server, warm_up_models
+
+        models = warm_up_models()
+        llm = models["llm"]
 
     def _handle_exit(signum, frame):
         stop_server()

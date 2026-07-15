@@ -141,10 +141,23 @@ function fileGlyph(ext) {
   return map[ext] || "◆";
 }
 
+function dedupeByFile(results) {
+  const seen = new Map();
+  for (const r of results) {
+    const existing = seen.get(r.file_path);
+    if (!existing || r.score < existing.score) {
+      seen.set(r.file_path, r);
+    }
+  }
+  return Array.from(seen.values());
+}
+
+
 function renderFoundStrip(results) {
   if (!results || results.length === 0) return "";
 
-  return results.map(r => {
+  const deduped = dedupeByFile(results);
+  return deduped.map(r => {
     const isImage = r.type === "image";
     const fileName = r.file_path.split(/[\\/]/).pop();
 
@@ -169,7 +182,7 @@ function renderFoundStrip(results) {
 
 function wireFoundCardClicks(container) {
   container.querySelectorAll(".found-card[data-path]").forEach(el => {
-    el.parentElement.addEventListener("click", () => {
+    el.addEventListener("click", () => {
       window.pywebview.api.open_file(el.dataset.path);
     });
   });
